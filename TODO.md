@@ -10,16 +10,14 @@
   - [ ] Rod modifiers (e.g. old, sturdy, better, ancient, etc. randomly applies on purchase)
   - [ ] Depth and Weight mechanics for fishing
   - [ ] Information commands for current rod, money, and stats
-- [ ] Rework economy for fish to be in points, which are worth money
-  - [ ] Consider adding an inventory system for storing caught fish that can be sold at the shop?
-  - [ ] Consider Gambling mechanics with fish
+- [ ] Consider adding an inventory system for storing caught fish that can be sold at the shop?
+- [ ] Consider Gambling mechanics with fish
 - [ ] Upgradeable fishing rods
   - [ ] Upgrade line and sinks to improve current rod for a lot less than buying a new one
   - [ ] Upgrade chances for better fish, less junk, etc.
 - [ ] Daily quests for fishing
 - [ ] Add a bait system
   - [ ] Different baits for different fish
-  - [ ] Bait durability
 - [ ] Implement weather effects on fishing
   - [ ] Different fish appear in different weather
   - [ ] Weather affects catch rates
