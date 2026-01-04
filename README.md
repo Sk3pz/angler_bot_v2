@@ -1,2 +1,2 @@
-# angler_bot_v2
-Fishing in discord
+# Angler Bot V2
+Fishing in discord - Coming Soon!
