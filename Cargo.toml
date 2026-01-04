@@ -9,10 +9,12 @@ better_term = "*"
 dotenv = "*"
 tokio = { version = "*", features = ["macros", "rt-multi-thread", "signal"]}
 rand = "*"
+rand_distr = "*"
 lazy_static = "*"
 serde = "*"
 serde_json = "*"
+chrono = "*"
 
 [dependencies.serenity]
-features = ["cache", "framework", "standard_framework", "rustls_backend", "gateway", "client", "collector", "model"]
+features = ["cache", "framework", "standard_framework", "rustls_backend", "gateway", "client", "collector", "model", "builder"]
 version = "*"

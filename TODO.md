@@ -25,5 +25,7 @@
 - [ ] Leveling system
   - [ ] Gain XP for fishing and catching new kinds of fish
   - [ ] Leveling up leaderboards
+- [ ] Look into auto fishing
+- [ ] Angler's Anomoly
 - [ ] Admin commands to set channels users can fish in
 - [ ] Find ways to reduce spam from fishing commands
