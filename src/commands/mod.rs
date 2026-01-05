@@ -84,7 +84,7 @@ pub trait BotCommand: Send + Sync {
 }
 
 pub struct CommandData<'a> {
-    pub command_name: String,
+    //pub command_name: String,
     pub ctx: &'a Context,
     pub command: &'a CommandInteraction,
     pub sender: &'a User,

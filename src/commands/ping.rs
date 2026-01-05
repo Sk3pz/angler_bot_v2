@@ -9,7 +9,7 @@ command! {
     run: async |data, times("How many times to print pong"): Option<i64>| {
         let times = times.unwrap_or(1).clamp(1, 5);
         let response = "pong!\n".repeat(times as usize);
-        crate::commands::command_response_ephemeral(&data.ctx, &data.command, response).await;
+        command_response_ephemeral(&data.ctx, &data.command, response).await;
         Ok(())
     }
 }

@@ -72,7 +72,7 @@ impl EventHandler for Handler {
 
             // build the data
             let cmd_data = CommandData {
-                command_name: command_name.clone(),
+                //command_name: command_name.clone(),
                 ctx: &ctx,
                 command: &command,
                 sender: &command.user,
