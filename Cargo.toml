@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2024"
 authors = ["Eric (Skepz) <skepz.dev@gmail.com>"]
 
+[features]
+default = [] # add "guild_relative_userdata" to make it run by default
+guild_relative_userdata = []
+
 [dependencies]
 better_term = "*"
 dotenv = "*"

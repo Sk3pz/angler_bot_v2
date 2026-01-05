@@ -19,7 +19,7 @@ pub struct Handler {}
 
 #[async_trait]
 impl EventHandler for Handler {
-    async fn message(&self, ctx: Context, msg: Message) {
+    async fn message(&self, _: Context, msg: Message) {
         // Ignore messages from bots
         if msg.author.bot {
             return;
