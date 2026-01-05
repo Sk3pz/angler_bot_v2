@@ -20,5 +20,7 @@ target/
 .env
 
 # generated files
-data/
+data/guilds/
+data/users/
+data/config.json
 guilds/

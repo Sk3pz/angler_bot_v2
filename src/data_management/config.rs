@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Config {}
+pub struct Config {
+    // configuration values here
+}
 
 impl Config {
     pub fn load() -> Self {

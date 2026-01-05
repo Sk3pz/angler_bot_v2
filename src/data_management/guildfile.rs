@@ -14,6 +14,7 @@ pub struct GuildFile {
     // channels where fishing commands are allowed
     // if empty, fishing commands are allowed in all channels
     fishing_channels: Vec<u64>,
+    // other guild specific settings can go here
 }
 
 pub struct GuildSettings {

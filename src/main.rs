@@ -8,6 +8,7 @@ mod commands;
 pub mod data_management;
 mod discord;
 pub mod error;
+pub mod fishing;
 pub mod helpers;
 pub mod logging;
 
