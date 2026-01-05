@@ -8,7 +8,8 @@ use serenity::{
 
 use crate::{
     commands::{
-        CommandData, command_response, error_command_response, get_all_cmds, register_command,
+        CommandData, command_response, command_response_ephemeral, error_command_response,
+        get_all_cmds, register_command,
     },
     helpers::generate_error_code,
     nay, yay,
@@ -72,6 +73,8 @@ impl EventHandler for Handler {
             // build the data
             let cmd_data = CommandData {
                 command_name: command_name.clone(),
+                ctx: &ctx,
+                command: &command,
                 sender: &command.user,
                 guild_id: command.guild_id.as_ref(),
                 command_options: command.data.options(),
@@ -94,9 +97,8 @@ impl EventHandler for Handler {
                 }
 
                 // run
-                match cmd.run(&cmd_data).await {
-                    Ok(msg) => command_response(&ctx, &command, msg).await,
-                    Err(e) => command_response(&ctx, &command, e).await,
+                if let Err(e) = cmd.run(&cmd_data).await {
+                    command_response_ephemeral(&ctx, &command, e).await;
                 }
             } else {
                 // command not found (shouldn't happen)

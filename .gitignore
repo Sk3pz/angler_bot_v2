@@ -18,3 +18,7 @@ target/
 
 # Local environment files
 .env
+
+# generated files
+data/
+guilds/

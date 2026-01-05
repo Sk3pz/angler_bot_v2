@@ -34,6 +34,20 @@ pub async fn command_response<S: Into<String>>(
     }
 }
 
+pub async fn command_response_ephemeral<S: Into<String>>(
+    ctx: &Context,
+    command: &CommandInteraction,
+    msg: S,
+) {
+    let data = CreateInteractionResponseMessage::new()
+        .content(msg.into())
+        .ephemeral(true);
+    let builder = CreateInteractionResponse::Message(data);
+    if let Err(err) = command.create_response(&ctx.http, builder).await {
+        nay!("Failed to respond to command: {}", err)
+    }
+}
+
 pub async fn error_command_response<S: Into<String>>(
     ctx: &Context,
     command: &CommandInteraction,
@@ -54,24 +68,25 @@ pub async fn error_command_response<S: Into<String>>(
 
     let chosen_response = format!("{}{}", chosen_response, code);
 
-    command_response(ctx, command, chosen_response).await;
+    command_response_ephemeral(ctx, command, chosen_response).await;
 }
 
 #[async_trait]
 pub trait BotCommand: Send + Sync {
     fn name(&self) -> &'static str;
-    fn description(&self) -> &'static str;
     fn requires_guild(&self) -> bool;
 
     // returns the builder to send to Discord
     fn register(&self) -> CreateCommand;
 
     // execution logic
-    async fn run(&self, data: &CommandData<'_>) -> Result<String, String>;
+    async fn run(&self, data: &CommandData<'_>) -> Result<(), String>;
 }
 
 pub struct CommandData<'a> {
     pub command_name: String,
+    pub ctx: &'a Context,
+    pub command: &'a CommandInteraction,
     pub sender: &'a User,
     // None if in a DM
     pub guild_id: Option<&'a GuildId>,
@@ -256,14 +271,12 @@ macro_rules! command {
 
         // Logic Block
         // Parse the pattern |data, arg: type| { body }
-        run: async |$data:ident $(, $arg_name:ident : $arg_type:ty ),*| $body:block
-    ) => {
+        run: async |$data:ident $(, $arg_name:ident($arg_desc:literal) : $arg_type:ty )*| $body:block) => {
         pub struct $struct_name;
 
         #[serenity::async_trait]
         impl $crate::commands::BotCommand for $struct_name {
             fn name(&self) -> &'static str { $name }
-            fn description(&self) -> &'static str { $desc }
             fn requires_guild(&self) -> bool { $req_guild }
 
             fn register(&self) -> serenity::builder::CreateCommand {
@@ -276,7 +289,7 @@ macro_rules! command {
                     let opt = serenity::builder::CreateCommandOption::new(
                         <$arg_type as $crate::commands::CommandArgument>::option_type(),
                         stringify!($arg_name),
-                        "Argument"
+                        $arg_desc
                     )
                     .required(<$arg_type as $crate::commands::CommandArgument>::is_required());
 
@@ -285,7 +298,7 @@ macro_rules! command {
                 cmd
             }
 
-            async fn run(&self, $data: &$crate::commands::CommandData<'_>) -> Result<String, String> {
+            async fn run(&self, $data: &$crate::commands::CommandData<'_>) -> Result<(), String> {
                 // Extraction
                 $(
                     // Find the option by name
@@ -312,7 +325,7 @@ macro_rules! command {
         name: $name:expr,
         desc: $desc:expr,
 
-        run: async |$data:ident $(, $arg_name:ident : $arg_type:ty ),*| $body:block
+        run: async |$data:ident $(, $arg_name:ident($arg_desc:literal) : $arg_type:ty )*| $body:block
     ) => {
         // Recursively call the main macro, injecting 'false'
         command!(
@@ -320,7 +333,7 @@ macro_rules! command {
             name: $name,
             desc: $desc,
             requires_guild: false, // <--- DEFAULT APPLIED HERE
-            run: async |$data, $( $arg_name : $arg_type ),*| $body
+            run: async |$data $(, $arg_name : $arg_type $arg_desc )*| $body
         );
     };
 }

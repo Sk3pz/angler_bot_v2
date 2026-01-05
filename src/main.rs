@@ -5,6 +5,7 @@ use serenity::{Client, all::GatewayIntents};
 use crate::discord::Handler;
 
 mod commands;
+pub mod data_management;
 mod discord;
 pub mod error;
 pub mod helpers;
