@@ -16,17 +16,7 @@ pub mod logging;
 async fn main() {
     yay!("Angler Bot is starting up!");
 
-    // create the guilds and data directory if it doesn't exist
-    let Ok(exists) = std::fs::exists("./guilds") else {
-        nay!("Failed to check if guilds directory exists");
-        return;
-    };
-    if !exists {
-        if let Err(e) = std::fs::create_dir_all("./guilds") {
-            nay!("Failed to create guilds directory: {}", e);
-            return;
-        };
-    }
+    // Create the data directory if it doesn't exist
     let Ok(exists) = std::fs::exists("./data") else {
         nay!("Failed to check if guilds directory exists");
         return;
@@ -34,6 +24,17 @@ async fn main() {
     if !exists {
         if let Err(e) = std::fs::create_dir_all("./data") {
             nay!("Failed to create data directory: {}", e);
+            return;
+        };
+    }
+    // create the guilds and data directory if it doesn't exist
+    let Ok(exists) = std::fs::exists("./data/guilds") else {
+        nay!("Failed to check if guilds directory exists");
+        return;
+    };
+    if !exists {
+        if let Err(e) = std::fs::create_dir_all("./data/guilds") {
+            nay!("Failed to create guilds directory: {}", e);
             return;
         };
     }

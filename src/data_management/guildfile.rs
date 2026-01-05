@@ -9,6 +9,8 @@ use serenity::all::{ChannelId, GuildId};
 
 use crate::hey;
 
+const GUILDFILE_LOCATION: &str = "./data/guilds/";
+
 #[derive(Serialize, Deserialize)]
 pub struct GuildFile {
     // channels where fishing commands are allowed
@@ -33,8 +35,8 @@ impl GuildSettings {
     }
 
     pub fn get(id: &GuildId) -> Self {
-        let raw_path = format!("./guilds/{}.json", id);
-        let path = std::path::Path::new(&raw_path);
+        let raw_path = format!("{}/{}.json", GUILDFILE_LOCATION, id);
+        let path = Path::new(&raw_path);
 
         if !path.exists() {
             Self::generate(id);
@@ -56,7 +58,7 @@ impl GuildSettings {
     }
 
     fn generate(id: &GuildId) {
-        let raw_path = format!("./guilds/{}.json", id.get());
+        let raw_path = format!("{}/{}.json", GUILDFILE_LOCATION, id);
         let path = Path::new(raw_path.as_str());
 
         if path.exists() {
@@ -94,7 +96,7 @@ impl GuildSettings {
     }
 
     fn update(&self) {
-        let raw_path = format!("./guilds/{}.json", self.id.get());
+        let raw_path = format!("{}/{}.json", GUILDFILE_LOCATION, self.id);
         let path = Path::new(raw_path.as_str());
 
         if !path.exists() {
@@ -145,7 +147,8 @@ impl GuildSettings {
         self.update();
     }
 
-    pub fn is_allowed_channel(&mut self, channel_id: u64) -> bool {
+    /// check if a channel is allowed for fishing commands
+    pub fn check_channel(&mut self, channel_id: u64) -> bool {
         self.reload();
         self.file.fishing_channels.contains(&channel_id) || self.file.fishing_channels.is_empty()
     }
