@@ -1,10 +1,3 @@
-use serenity::{
-    all::{
-        ActivityData, Command, Context, EventHandler, Interaction, Message, OnlineStatus, Ready,
-        ResumedEvent,
-    },
-    async_trait,
-};
 use crate::{
     commands::{
         CommandData, command_response, command_response_ephemeral, error_command_response,
@@ -12,6 +5,13 @@ use crate::{
     },
     helpers::generate_error_code,
     nay, yay,
+};
+use serenity::{
+    all::{
+        ActivityData, Command, Context, EventHandler, Interaction, Message, OnlineStatus, Ready,
+        ResumedEvent,
+    },
+    async_trait,
 };
 
 pub struct Handler {}
@@ -92,7 +92,7 @@ impl EventHandler for Handler {
                             &command,
                             "You must be in a server to use that command!",
                         )
-                            .await;
+                        .await;
                         return;
                     }
 
@@ -104,18 +104,16 @@ impl EventHandler for Handler {
                     // command not found (shouldn't happen)
                     let error_code = format!("CMD_NOT_FOUND-{}", generate_error_code());
                     nay!(
-                    "Unknown Command Run: {} CODE: {}",
-                    command_name,
-                    error_code.clone()
-                );
+                        "Unknown Command Run: {} CODE: {}",
+                        command_name,
+                        error_code.clone()
+                    );
                     error_command_response(&ctx, &command, error_code).await;
                     return;
                 }
-
-
             }
 
-            Interaction::Component(component_interaction) => {
+            Interaction::Component(_component_interaction) => {
                 // TODO: handle component interactions (buttons, select menus, etc.)
             }
 
