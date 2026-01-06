@@ -11,7 +11,6 @@ pub mod error;
 pub mod fishing;
 pub mod helpers;
 pub mod logging;
-mod embeds;
 
 
 #[tokio::main]

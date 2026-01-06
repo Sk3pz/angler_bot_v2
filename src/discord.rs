@@ -5,7 +5,6 @@ use serenity::{
     },
     async_trait,
 };
-use serenity::all::{CreateInteractionResponse, CreateInteractionResponseMessage};
 use crate::{
     commands::{
         CommandData, command_response, command_response_ephemeral, error_command_response,
@@ -14,7 +13,6 @@ use crate::{
     helpers::generate_error_code,
     nay, yay,
 };
-use crate::embeds::get_all_embeds;
 
 pub struct Handler {}
 
@@ -118,39 +116,7 @@ impl EventHandler for Handler {
             }
 
             Interaction::Component(component_interaction) => {
-                let embeds = get_all_embeds();
-
-                // Loop through registered embeds to find which one owns this custom_id
-                let mut handled = false;
-                for embed in embeds {
-                    // handle() returns Ok(true) if it matched the ID and ran the code
-                    match embed.handle(&ctx, &component_interaction).await {
-                        Ok(true) => {
-                            handled = true;
-                            break;
-                        }
-                        Ok(false) => continue, // ID didn't match, try next embed
-                        Err(e) => {
-                            // The handler matched but returned an error string
-                            component_interaction
-                                .create_response(&ctx.http,
-                                                 CreateInteractionResponse::Message(
-                                                     CreateInteractionResponseMessage::new()
-                                                         .content(format!("Error: {}", e)
-                                                     ).ephemeral(true),
-                                                 )
-                                ).await.expect("TODO: panic message");
-                            handled = true;
-                            break;
-                        }
-                    }
-                }
-
-                if !handled {
-                    nay!("Unhandled Component Interaction: {}", component_interaction.data.custom_id);
-                    // Optionally acknowledge so the button stops spinning
-                    let _ = component_interaction.defer(&ctx.http).await;
-                }
+                // TODO: handle component interactions (buttons, select menus, etc.)
             }
 
             _ => {}
