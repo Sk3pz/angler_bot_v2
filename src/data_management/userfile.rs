@@ -16,9 +16,9 @@ const DATA_DIR: &str = "./data";
 /**
  *  NOTE: If the feature "guild_relative_userdata" is enabled,
  *  user data files will be stored in a guild-relative path:
- *  ./data/guilds/{guild_id}/users/{user_id}.json
+ *  ./data/guilds/{guild_id}/users/{user_id}.ron
  *  Otherwise, they will be stored in a global path:
- *  ./data/users/{user_id}.json
+ *  ./data/users/{user_id}.ron
  *
  * To run in guild-relative mode, enable the flag on run: `cargo run --features guild_relative_userdata`
  *   or add `default = ["guild_relative_userdata"]` to the [features] section of Cargo.toml
@@ -64,14 +64,14 @@ impl UserFile {
     #[cfg(feature = "guild_relative_userdata")]
     pub fn get_path(&self) -> String {
         format!(
-            "{}/guilds/{}/users/{}.json",
+            "{}/guilds/{}/users/{}.data",
             DATA_DIR, self.guild_id, self.user_id
         )
     }
 
     #[cfg(not(feature = "guild_relative_userdata"))]
     pub fn get_path(&self) -> String {
-        format!("{}/users/{}.json", DATA_DIR, self.user_id)
+        format!("{}/users/{}.data", DATA_DIR, self.user_id)
     }
 
     #[cfg(feature = "guild_relative_userdata")]
@@ -102,7 +102,7 @@ impl UserFile {
             return file;
         };
 
-        file.file = serde_json::from_str(data.as_str())
+        file.file = ron::from_str(data.as_str())
             .expect(format!("failed to deserialize user data with ID {}", id).as_str());
 
         file
@@ -135,10 +135,37 @@ impl UserFile {
             return file;
         };
 
-        file.file = serde_json::from_str(data.as_str())
+        file.file = ron::from_str(data.as_str())
             .expect(format!("failed to deserialize user data with ID {}", id).as_str());
 
         file
+    }
+
+    fn generate_continued(id: &UserId, path: &Path, default_file: &Self) {
+        if path.exists() {
+            hey!("User data already exists: {}", id);
+            return;
+        };
+
+        let Ok(mut file) = OpenOptions::new()
+            .read(false)
+            .write(true)
+            .create(true)
+            .append(false)
+            .open(path)
+        else {
+            hey!("Failed to get file for user data: {}", id);
+            return;
+        };
+
+        let Ok(data) = ron::to_string(&default_file.file) else {
+            hey!("Failed to serialize user data: {}", id.clone());
+            return;
+        };
+
+        if let Err(e) = write!(file, "{}", data) {
+            hey!("Failed to write to file for user {}: {}", id, e);
+        }
     }
 
     #[cfg(feature = "guild_relative_userdata")]
@@ -155,30 +182,7 @@ impl UserFile {
         let raw_path = default_file.get_path();
         let path = Path::new(raw_path.as_str());
 
-        if path.exists() {
-            hey!("User data already exists: {}", id);
-            return;
-        };
-
-        let Ok(mut file) = OpenOptions::new()
-            .read(false)
-            .write(true)
-            .create(true)
-            .append(false)
-            .open(path)
-        else {
-            hey!("Failed to get file for user data: {}", id);
-            return;
-        };
-
-        let Ok(data) = serde_json::to_string(&default_file.file) else {
-            hey!("Failed to serialize user data: {}", id.clone());
-            return;
-        };
-
-        if let Err(e) = write!(file, "{}", data) {
-            hey!("Failed to write to file for user {}: {}", id, e);
-        }
+        Self::generate_continued(id, path, &default_file);
     }
 
     #[cfg(not(feature = "guild_relative_userdata"))]
@@ -194,30 +198,7 @@ impl UserFile {
         let raw_path = default_file.get_path();
         let path = Path::new(raw_path.as_str());
 
-        if path.exists() {
-            hey!("User data already exists: {}", id);
-            return;
-        };
-
-        let Ok(mut file) = OpenOptions::new()
-            .read(false)
-            .write(true)
-            .create(true)
-            .append(false)
-            .open(path)
-        else {
-            hey!("Failed to get file for user data: {}", id);
-            return;
-        };
-
-        let Ok(data) = serde_json::to_string(&default_file.file) else {
-            hey!("Failed to serialize user data: {}", id.clone());
-            return;
-        };
-
-        if let Err(e) = write!(file, "{}", data) {
-            hey!("Failed to write to file for user {}: {}", id, e);
-        }
+        Self::generate_continued(id, path, &default_file);
     }
 
     #[cfg(feature = "guild_relative_userdata")]
@@ -253,7 +234,7 @@ impl UserFile {
             return;
         };
 
-        let Ok(data) = serde_json::to_string(&self.file) else {
+        let Ok(data) = ron::to_string(&self.file) else {
             hey!("Failed to serialize user data: {}", &self.user_id);
             return;
         };

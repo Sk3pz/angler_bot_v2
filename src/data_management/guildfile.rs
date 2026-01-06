@@ -35,7 +35,7 @@ impl GuildSettings {
     }
 
     pub fn get(id: &GuildId) -> Self {
-        let raw_path = format!("{}/{}.json", GUILDFILE_LOCATION, id);
+        let raw_path = format!("{}/{}.data", GUILDFILE_LOCATION, id);
         let path = Path::new(&raw_path);
 
         if !path.exists() {
@@ -48,7 +48,7 @@ impl GuildSettings {
             return Self::new(id);
         };
 
-        let guildfile: GuildFile = serde_json::from_str(data.as_str())
+        let guildfile: GuildFile = ron::from_str(data.as_str())
             .expect(format!("failed to deserialize guild data with ID {}", id).as_str());
 
         Self {
@@ -58,7 +58,7 @@ impl GuildSettings {
     }
 
     fn generate(id: &GuildId) {
-        let raw_path = format!("{}/{}.json", GUILDFILE_LOCATION, id);
+        let raw_path = format!("{}/{}.data", GUILDFILE_LOCATION, id);
         let path = Path::new(raw_path.as_str());
 
         if path.exists() {
@@ -79,7 +79,7 @@ impl GuildSettings {
 
         let default_file = Self::new(id);
 
-        let Ok(data) = serde_json::to_string(&default_file.file) else {
+        let Ok(data) = ron::to_string(&default_file.file) else {
             hey!("Failed to serialize guild data: {}", id.clone());
             return;
         };
@@ -96,7 +96,7 @@ impl GuildSettings {
     }
 
     fn update(&self) {
-        let raw_path = format!("{}/{}.json", GUILDFILE_LOCATION, self.id);
+        let raw_path = format!("{}/{}.data", GUILDFILE_LOCATION, self.id);
         let path = Path::new(raw_path.as_str());
 
         if !path.exists() {
@@ -115,7 +115,7 @@ impl GuildSettings {
             return;
         };
 
-        let Ok(data) = serde_json::to_string(&self.file) else {
+        let Ok(data) = ron::to_string(&self.file) else {
             hey!("Failed to serialize guild data: {}", &self.id);
             return;
         };

@@ -11,7 +11,7 @@ pub mod error;
 pub mod fishing;
 pub mod helpers;
 pub mod logging;
-
+pub mod embeds;
 
 #[tokio::main]
 async fn main() {

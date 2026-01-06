@@ -16,7 +16,7 @@ rand = "*"
 rand_distr = "*"
 lazy_static = "*"
 serde = "*"
-serde_json = "*"
+ron = "*"
 chrono = "*"
 
 [dependencies.serenity]

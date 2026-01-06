@@ -24,7 +24,7 @@ impl EventHandler for Handler {
             return;
         }
 
-        // handle messages
+        // handle messages here
     }
 
     async fn ready(&self, ctx: Context, ready: Ready) {
