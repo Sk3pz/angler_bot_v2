@@ -5,7 +5,7 @@ use serenity::{
     },
     async_trait,
 };
-
+use serenity::all::{CreateInteractionResponse, CreateInteractionResponseMessage};
 use crate::{
     commands::{
         CommandData, command_response, command_response_ephemeral, error_command_response,
@@ -14,6 +14,7 @@ use crate::{
     helpers::generate_error_code,
     nay, yay,
 };
+use crate::embeds::get_all_embeds;
 
 pub struct Handler {}
 
@@ -66,51 +67,93 @@ impl EventHandler for Handler {
     }
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
-        if let Interaction::Command(command) = interaction {
-            // get the name of the command
-            let command_name = &command.data.name;
+        match interaction {
+            Interaction::Command(command) => {
+                // get the name of the command
+                let command_name = &command.data.name;
 
-            // build the data
-            let cmd_data = CommandData {
-                command_name: command_name.clone(),
-                ctx: &ctx,
-                command: &command,
-                sender: &command.user,
-                guild_id: command.guild_id.as_ref(),
-                command_options: command.data.options(),
-                channel: command.channel_id,
-            };
+                // build the data
+                let cmd_data = CommandData {
+                    command_name: command_name.clone(),
+                    ctx: &ctx,
+                    command: &command,
+                    sender: &command.user,
+                    guild_id: command.guild_id.as_ref(),
+                    command_options: command.data.options(),
+                    channel: command.channel_id,
+                };
 
-            // Find the command to run
-            let commands = get_all_cmds();
-            let cmd_name_str = command_name.as_str();
-            if let Some(cmd) = commands.iter().find(|c| c.name() == cmd_name_str) {
-                // guild-only command check
-                if cmd.requires_guild() && cmd_data.guild_id.is_none() {
-                    command_response(
-                        &ctx,
-                        &command,
-                        "You must be in a server to use that command!",
-                    )
-                    .await;
-                    return;
-                }
+                // Find the command to run
+                let commands = get_all_cmds();
+                let cmd_name_str = command_name.as_str();
+                if let Some(cmd) = commands.iter().find(|c| c.name() == cmd_name_str) {
+                    // guild-only command check
+                    if cmd.requires_guild() && cmd_data.guild_id.is_none() {
+                        command_response(
+                            &ctx,
+                            &command,
+                            "You must be in a server to use that command!",
+                        )
+                            .await;
+                        return;
+                    }
 
-                // run
-                if let Err(e) = cmd.run(&cmd_data).await {
-                    command_response_ephemeral(&ctx, &command, e).await;
-                }
-            } else {
-                // command not found (shouldn't happen)
-                let error_code = format!("CMD_NOT_FOUND-{}", generate_error_code());
-                nay!(
+                    // run
+                    if let Err(e) = cmd.run(&cmd_data).await {
+                        command_response_ephemeral(&ctx, &command, e).await;
+                    }
+                } else {
+                    // command not found (shouldn't happen)
+                    let error_code = format!("CMD_NOT_FOUND-{}", generate_error_code());
+                    nay!(
                     "Unknown Command Run: {} CODE: {}",
                     command_name,
                     error_code.clone()
                 );
-                error_command_response(&ctx, &command, error_code).await;
-                return;
+                    error_command_response(&ctx, &command, error_code).await;
+                    return;
+                }
+
+
             }
+
+            Interaction::Component(component_interaction) => {
+                let embeds = get_all_embeds();
+
+                // Loop through registered embeds to find which one owns this custom_id
+                let mut handled = false;
+                for embed in embeds {
+                    // handle() returns Ok(true) if it matched the ID and ran the code
+                    match embed.handle(&ctx, &component_interaction).await {
+                        Ok(true) => {
+                            handled = true;
+                            break;
+                        }
+                        Ok(false) => continue, // ID didn't match, try next embed
+                        Err(e) => {
+                            // The handler matched but returned an error string
+                            component_interaction
+                                .create_response(&ctx.http,
+                                                 CreateInteractionResponse::Message(
+                                                     CreateInteractionResponseMessage::new()
+                                                         .content(format!("Error: {}", e)
+                                                     ).ephemeral(true),
+                                                 )
+                                ).await.expect("TODO: panic message");
+                            handled = true;
+                            break;
+                        }
+                    }
+                }
+
+                if !handled {
+                    nay!("Unhandled Component Interaction: {}", component_interaction.data.custom_id);
+                    // Optionally acknowledge so the button stops spinning
+                    let _ = component_interaction.defer(&ctx.http).await;
+                }
+            }
+
+            _ => {}
         }
     }
 }

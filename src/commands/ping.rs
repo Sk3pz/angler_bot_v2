@@ -1,4 +1,4 @@
-use crate::{command, response};
+use crate::command;
 
 // Ping command is for testing new systems. Here we are implementing an example shop system to test the response macro.
 // This command will create a navigatable shop with buttons to buy items.
@@ -12,21 +12,7 @@ command! {
     requires_guild: false,
 
     run: async |data| {
-        let response = response! {
-            title: "Shop",
-            desc: "Welcome!",
 
-            field: "Item 1" => "Price: 50", (true),
-
-            row: {
-                // Note the comma before (Primary)
-                button: "Buy" => "buy_id", (Primary),
-            }
-        };
-
-        if let Err(e) = data.command.create_response(&data.ctx.http, serenity::all::CreateInteractionResponse::Message(response)).await {
-            return Err(format!("Failed to create response: {}", e));
-        }
         Ok(())
     }
 }
