@@ -6,10 +6,16 @@
   - [ ] Large amount of fish types to be caught (rebalance and tie into new systems below)
   - [ ] Random events while fishing (e.g., junk, treasure, special fish)
   - [ ] Shop to buy new rods (rebalance)
-  - [ ] Beastiary of fish types caught
+  - [ ] Bestiary of fish types caught
   - [ ] Rod modifiers (e.g. old, sturdy, better, ancient, etc. randomly applies on purchase)
   - [ ] Depth and Weight mechanics for fishing
   - [ ] Information commands for current rod, money, and stats
+- [ ] Fishing events
+  - [ ] Legendary Fish - rare fish with unique names and descriptions that can be caught (i.e. Loch Ness Monster, Giant Squid, etc.)
+  - [ ] Seasonal Fish - fish that can only be caught during certain times of the year (e.g., Christmas fish, Halloween fish, etc.)
+  - [ ] Junk / Trash - no value, just a nuisance
+  - [ ] Treasure - random amount of money or a random item (e.g., bait, rod upgrade, etc.)
+  - [ ] Angler's Anomaly - Some random events that can occur while fishing that provide lore / story to the game world
 - [ ] Consider adding an inventory system for storing caught fish that can be sold at the shop?
 - [ ] Consider Gambling mechanics with fish
 - [ ] Upgradeable fishing rods
@@ -26,6 +32,5 @@
   - [ ] Gain XP for fishing and catching new kinds of fish
   - [ ] Leveling up leaderboards
 - [ ] Look into auto fishing
-- [ ] Angler's Anomaly
 - [ ] Admin commands to set channels users can fish in
 - [ ] Find ways to reduce spam from fishing commands

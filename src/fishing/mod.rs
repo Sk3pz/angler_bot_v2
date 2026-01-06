@@ -2,3 +2,5 @@
 
 pub mod fish;
 pub mod rods;
+mod trash;
+mod treature;
