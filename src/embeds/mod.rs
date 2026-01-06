@@ -1,8 +1,7 @@
 pub mod shop;
 
 use serenity::all::{
-    ComponentInteraction, Context, CreateActionRow, CreateButton, CreateEmbed,
-    CreateSelectMenu
+    ComponentInteraction, Context, CreateActionRow, CreateEmbed,
 };
 use serenity::async_trait;
 
@@ -11,12 +10,6 @@ pub fn get_all_embeds() -> Vec<Box<dyn InteractiveEmbed>> {
         Box::new(shop::FishShopEmbed), // fix error
         // Add other embeds here
     ]
-}
-
-// Valid Component Types for your DSL
-pub enum ComponentType {
-    Button(CreateButton),
-    SelectMenu(CreateSelectMenu),
 }
 
 #[async_trait]
@@ -107,9 +100,15 @@ macro_rules! embed {
 
                         #[allow(unused_assignments, unused_mut)]
                         if stringify!($comp_type) == "select" {
+                             let mut options = Vec::new();
+                             $(
+                                 $crate::extract_select_option!($key, $value, options);
+                             )*
+                             
+                             let kind = serenity::builder::CreateSelectMenuKind::String { options };
                              let mut sel = serenity::builder::CreateSelectMenu::new(
                                  custom_id,
-                                 serenity::builder::CreateSelectMenuKind::String { options: vec![] }
+                                 kind
                              );
                              $(
                                  sel = $crate::apply_select_prop!(sel, $key, $value);
@@ -144,14 +143,10 @@ macro_rules! embed {
                                 let $ctx = ctx;
                                 let $msg = interaction;
 
-                                let res: Result<(), String> = async {
+                                async {
                                     $body
-                                    Ok(())
                                 }.await;
 
-                                if let Err(e) = res {
-                                    return Err(e);
-                                }
                                 return Ok(true);
                             }
                         ),*
@@ -174,14 +169,18 @@ macro_rules! apply_button_prop {
 }
 
 #[macro_export]
+macro_rules! extract_select_option {
+    (options, $v:expr, $vec:ident) => {
+        $vec = $v.into_iter().map(|(label, val)|
+            serenity::builder::CreateSelectMenuOption::new(label, val)
+        ).collect();
+    };
+    ($k:ident, $v:expr, $vec:ident) => {};
+}
+
+#[macro_export]
 macro_rules! apply_select_prop {
     ($s:ident, placeholder, $v:expr) => { $s.placeholder($v) };
-    ($s:ident, options, $v:expr) => {
-        $s.options(
-            $v.into_iter().map(|(label, val)|
-                serenity::builder::CreateSelectMenuOption::new(label, val)
-            ).collect()
-        )
-    };
+    ($s:ident, options, $v:expr) => { $s }; // Already handled
     ($s:ident, $k:ident, $v:expr) => { $s };
 }

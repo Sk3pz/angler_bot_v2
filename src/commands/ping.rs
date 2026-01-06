@@ -12,6 +12,21 @@ command! {
     requires_guild: false,
 
     run: async |data| {
+        use crate::embeds::InteractiveEmbed;
+        use crate::embeds::shop::FishShopEmbed;
+
+        let shop = FishShopEmbed;
+        let (embed, components) = shop.create();
+
+        let builder = serenity::builder::CreateInteractionResponseMessage::new()
+            .embed(embed)
+            .components(components)
+            .ephemeral(true);
+
+        let response = serenity::builder::CreateInteractionResponse::Message(builder);
+        if let Err(e) = data.command.create_response(&data.ctx.http, response).await {
+            crate::nay!("Failed to send shop embed: {}", e);
+        }
 
         Ok(())
     }

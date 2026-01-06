@@ -13,6 +13,7 @@ pub mod helpers;
 pub mod logging;
 mod embeds;
 
+
 #[tokio::main]
 async fn main() {
     yay!("Angler Bot is starting up!");
