@@ -118,7 +118,7 @@ pub struct Pond {
 
 impl Pond {
     pub fn load() -> Self {
-        let raw_path = "./data/fish_types.ron".to_string();
+        let raw_path = "./data/gamedata/fish_types.ron".to_string();
         let path = std::path::Path::new(raw_path.as_str());
 
         if !path.exists() {
