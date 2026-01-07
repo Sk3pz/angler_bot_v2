@@ -133,6 +133,7 @@ impl FishType {
             weight,
             depth: caught_depth,
             value,
+            category: self.category.clone(),
         })
     }
 }
@@ -153,6 +154,8 @@ pub struct Fish {
     pub depth: f32,
     /// the value of the fish in $
     pub value: MonetaryAmount,
+    // passed down from FishType for catching calculations
+    pub category: FishCategory,
 }
 
 /// Represents a collection of catchable fish types

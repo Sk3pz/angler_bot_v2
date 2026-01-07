@@ -3,6 +3,9 @@
 motd = "Morning! Nice day for fishing, ain't it?"
 
 [fishing]
+# The base chance of catching a fish before any modifiers
+# scale of 0.0 to 1.0, where 0.0 means no chance of catching a fish and 1.0 means guaranteed catch
+base_catch_chance = 0.5
 # fish_value_calculation - Determines how the value of fish is calculated for the bot. Options include:
 #  - Averaged: Uses a "Fair Market" Approach, averaging the size and weight variations of the fish to affect value
 #     (More stable, less extreme highs and lows)
@@ -11,6 +14,7 @@ motd = "Morning! Nice day for fishing, ain't it?"
 fish_value_calculation = "Multiplicitive"
 
 [bait]
+# The weights (or effectiveness) of the different bait attributes
 low_bait_weight = 1.5
 medium_bait_weight = 3.0
 high_bait_weight = 5.0

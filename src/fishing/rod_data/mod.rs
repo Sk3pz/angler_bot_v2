@@ -45,31 +45,37 @@ impl RodLoadout {
     pub fn total_speed_multiplier(&self) -> f32 {
         self.reel.speed_multiplier * self.rod.efficiency_multiplier
     }
+
+    pub fn catch_chance_multiplier(&self) -> f32 {
+        self.rod.sensitivity
+    }
 }
 
 impl Default for RodLoadout {
     fn default() -> Self {
         Self {
             rod: RodBase {
-                name: "Basic Rod".to_string(),
-                strength_bonus: 1.0,
-                efficiency_multiplier: 1.0,
+                name: "Random Branch".to_string(),
+                // actually worse to fish with
+                sensitivity: 0.8,
+                strength_bonus: 0.8,
+                efficiency_multiplier: 0.8,
             },
             line: Line {
-                name: "Basic Line".to_string(),
-                strength: 10,
+                name: "Dirty String".to_string(),
+                strength: 10, // with the Random Branch this will be 8, 7.8 with the Rock Sinker
             },
             reel: Reel {
                 name: "Basic Reel".to_string(),
-                speed_multiplier: 1.0,
+                speed_multiplier: 0.8,
             },
             sinker: Sinker {
-                name: "Basic Sinker".to_string(),
-                weight: 0.0,
+                name: "Rock".to_string(),
+                weight: 0.2,
                 depth_range: Attribute {
                     min: 0.0,
                     max: 20.0,
-                    average: 10.0,
+                    average: 5.0,
                 },
             },
             bait: None,

@@ -15,6 +15,7 @@ pub struct General {
 // fishing section of the config
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Fishing {
+    pub base_catch_chance: f32,
     pub fish_value_calculation: ValueCalculationType,
 }
 
@@ -66,6 +67,7 @@ impl Default for Config {
                 motd: "Welcome to Angler Bot!".to_string(),
             },
             fishing: Fishing {
+                base_catch_chance: 0.5,
                 fish_value_calculation: ValueCalculationType::Multiplicitive,
             },
             bait: BaitConfig {
