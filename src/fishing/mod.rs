@@ -7,7 +7,6 @@ use crate::error::ReelError;
 
 pub mod depth;
 pub mod fish_data;
-pub mod inventory;
 pub mod rod_data;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

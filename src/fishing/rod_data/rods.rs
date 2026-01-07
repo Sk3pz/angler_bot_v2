@@ -4,7 +4,9 @@ use serde::{Deserialize, Serialize};
 pub struct RodBase {
     pub name: String,
     /// Multiplies to Line strength
+    /// 1.0 is no bonus, 1.5 is 50% stronger, etc.
     pub strength_bonus: f32,
     /// Multiplies Reel speed
+    /// 1.0 is no bonus, 1.5 is 50% faster, etc.
     pub efficiency_multiplier: f32,
 }
