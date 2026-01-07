@@ -1,8 +1,8 @@
 use std::env;
 
 use crate::discord::Handler;
-use crate::fishing::fish::FishAttribute;
-use crate::{data_management::config::Config, fishing::fish::FishType};
+use crate::fishing::Attribute;
+use crate::{data_management::config::Config, fishing::fish_data::fish::FishType};
 use serenity::{Client, all::GatewayIntents};
 
 mod commands;
@@ -50,6 +50,49 @@ async fn main() {
         let default_config = Config::default();
         // write default config to ./data/config.toml using toml
         default_config.save();
+    }
+
+    // create ./data/gamedata/ if it doesn't exist
+    let Ok(exists) = std::fs::exists("./data/gamedata") else {
+        nay!("Failed to check if gamedata directory exists");
+        return;
+    };
+    if !exists {
+        if let Err(e) = std::fs::create_dir_all("./data/gamedata") {
+            nay!("Failed to create gamedata directory: {}", e);
+            return;
+        };
+    }
+
+    // create ./data/gamedata/fish_types.ron if it doesn't exist
+    let Ok(exists) = std::fs::exists("./data/gamedata/fish_types.ron") else {
+        nay!("Failed to check if fish_types.ron exists");
+        return;
+    };
+    if !exists {
+        let pond = fishing::fish_data::fish::Pond {
+            fish_types: vec![FishType {
+                name: "Salmon".to_string(),
+                rarity: fishing::fish_data::rarity::FishRarity::Uncommon,
+                category: fishing::fish_data::fish::FishCategory::Predatory,
+                size_range: Attribute {
+                    min: 24.0,
+                    max: 58.0,
+                    average: 36.0,
+                },
+                weight_range: Attribute {
+                    min: 10.0,
+                    max: 90.0,
+                    average: 30.0,
+                },
+                depth_range: (25.0, 150.0),
+                base_value: 50.0,
+            }],
+        };
+        if let Err(e) = pond.save() {
+            nay!("Failed to create fish_types.ron: {}", e);
+            return;
+        };
     }
 
     // get the env variables

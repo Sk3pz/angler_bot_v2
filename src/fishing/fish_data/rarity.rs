@@ -1,7 +1,9 @@
-use rand::Rng;
+use rand_distr::{Distribution, weighted::WeightedIndex};
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 use std::str::FromStr;
+
+use crate::fishing::rod_data::bait::Bait;
 
 // TODO: When fishing, if there are no fish of the generated rarity or lower, then the player should
 //   not catch anything. (i.e. loch ness monster is mythical, but also at the deepest depth where no other fish are.
@@ -31,23 +33,45 @@ impl FishRarity {
         }
     }
 
-    /// Get the rarity from a weight.
-    fn from_weight(weight: u16) -> Self {
-        match weight {
-            v if v <= 1 => Self::Mythical,
-            v if v <= 10 => Self::Legendary,
-            v if v <= 89 => Self::Elusive,
-            v if v <= 200 => Self::Rare,
-            v if v <= 300 => Self::Uncommon,
-            _ => Self::Common,
-        }
+    /// Iterates all rarities
+    pub fn iter() -> impl Iterator<Item = FishRarity> {
+        [
+            FishRarity::Common,
+            FishRarity::Uncommon,
+            FishRarity::Rare,
+            FishRarity::Elusive,
+            FishRarity::Legendary,
+            FishRarity::Mythical,
+        ]
+        .into_iter()
     }
 
-    /// Get a random rarity based on the weights defined above. The total weight is 1000, so the random number will be between 1 and 1000.
-    pub fn weighted_random() -> Self {
-        let num = rand::rng().random_range(1..=1000);
+    /// Get a random rarity weighted properly based on bait and rarity weights.
+    pub fn weighted_random(bait: Option<&Bait>) -> Self {
+        let mut rng = rand::rng();
 
-        Self::from_weight(num)
+        let mut items = Vec::new();
+        let mut weights = Vec::new();
+
+        // Resolve the modifier once
+        let rarity_modifier = bait.and_then(|b| b.get_rarity_modifier());
+
+        for rarity in Self::iter() {
+            let mut weight = rarity.get_weight() as f32;
+
+            // Apply Bait Bias
+            if let Some((target, multiplier)) = &rarity_modifier {
+                if *target == rarity {
+                    weight *= *multiplier; // Uses Config value (e.g., 5.0)
+                }
+            }
+
+            items.push(rarity);
+            weights.push(weight);
+        }
+
+        let dist = WeightedIndex::new(&weights).unwrap();
+        items[dist.sample(&mut rng)].clone()
     }
 
     /// Get all rarities that are less than or equal to the given rarity.

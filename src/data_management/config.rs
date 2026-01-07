@@ -18,10 +18,19 @@ pub struct Fishing {
     pub fish_value_calculation: ValueCalculationType,
 }
 
+// bait section of the config
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct BaitConfig {
+    pub low_bait_weight: f32,
+    pub medium_bait_weight: f32,
+    pub high_bait_weight: f32,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Config {
     pub general: General,
     pub fishing: Fishing,
+    pub bait: BaitConfig,
 }
 
 impl Config {
@@ -58,6 +67,11 @@ impl Default for Config {
             },
             fishing: Fishing {
                 fish_value_calculation: ValueCalculationType::Multiplicitive,
+            },
+            bait: BaitConfig {
+                low_bait_weight: 1.5,
+                medium_bait_weight: 3.5,
+                high_bait_weight: 5.0,
             },
         }
     }

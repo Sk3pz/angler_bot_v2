@@ -49,4 +49,16 @@ impl Depth {
         let depth = rng.random_range(min..=max);
         (depth * 100.0).round() / 100.0
     }
+
+    pub fn iter() -> impl Iterator<Item = Depth> {
+        [
+            Depth::Shallow,
+            Depth::MidWater,
+            Depth::Deep,
+            Depth::Abyssal,
+            Depth::Hadal,
+        ]
+        .iter()
+        .cloned()
+    }
 }

@@ -7,6 +7,7 @@ use rand_distr::TriangularError;
 pub enum ReelError {
     IOError(std::io::Error),
     MathError(TriangularError),
+    RandomError(String),
 }
 
 impl Display for ReelError {
@@ -14,6 +15,7 @@ impl Display for ReelError {
         match self {
             ReelError::IOError(err) => write!(f, "IO Error: {}", err),
             ReelError::MathError(err) => write!(f, "Math Error: {}", err),
+            ReelError::RandomError(err) => write!(f, "Random Error: {}", err),
         }
     }
 }

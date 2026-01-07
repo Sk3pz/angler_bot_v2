@@ -9,3 +9,8 @@ motd = "Morning! Nice day for fishing, ain't it?"
 #  - Multiplicative: Uses a "Multiplicative" Approach, multiplying the size and weight variations of the fish to affect value
 #     (Way more drastic, Higher highs and lower lows)
 fish_value_calculation = "Multiplicitive"
+
+[bait]
+low_bait_weight = 1.5
+medium_bait_weight = 3.0
+high_bait_weight = 5.0

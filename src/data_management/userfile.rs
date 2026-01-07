@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use serenity::all::GuildId;
 use serenity::all::UserId;
 
-use crate::hey;
+use crate::{data_management::monetary::MonetaryAmount, hey};
 
 const DATA_DIR: &str = "./data";
 
@@ -27,11 +27,14 @@ const DATA_DIR: &str = "./data";
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct UserValues {
     // stored user values here
+    pub balance: MonetaryAmount,
 }
 
 impl Default for UserValues {
     fn default() -> Self {
-        Self {}
+        Self {
+            balance: MonetaryAmount::new(100.0),
+        }
     }
 }
 
@@ -48,7 +51,7 @@ impl UserFile {
     pub fn new(id: &UserId, guild_id: &GuildId) -> Self {
         Self {
             user_id: id.clone(),
-            file: UserValues {},
+            file: UserValues::default(),
             guild_id: guild_id.clone(),
         }
     }
@@ -57,7 +60,7 @@ impl UserFile {
     pub fn new(id: &UserId) -> Self {
         Self {
             user_id: id.clone(),
-            file: UserValues {},
+            file: UserValues::default(),
         }
     }
 
