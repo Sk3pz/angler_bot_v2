@@ -56,12 +56,29 @@ impl EventHandler for Handler {
                 OnlineStatus::Online,
             );
         } else {
-            ctx.set_presence(Some(ActivityData::playing("/fish")), OnlineStatus::Online);
+            let config = crate::data_management::config::Config::load();
+            ctx.set_presence(
+                Some(ActivityData::custom(config.general.motd)),
+                OnlineStatus::Online,
+            );
         }
     }
 
-    async fn resume(&self, _: Context, _: ResumedEvent) {
-        // no resume logic needed right now
+    async fn resume(&self, ctx: Context, _: ResumedEvent) {
+        let debug = cfg!(debug_assertions);
+        // set bot activity
+        if debug {
+            ctx.set_presence(
+                Some(ActivityData::custom("Stocking the pond...")),
+                OnlineStatus::Online,
+            );
+        } else {
+            let config = crate::data_management::config::Config::load();
+            ctx.set_presence(
+                Some(ActivityData::custom(config.general.motd)),
+                OnlineStatus::Online,
+            );
+        }
     }
 
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {

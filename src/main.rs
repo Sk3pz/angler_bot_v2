@@ -1,6 +1,6 @@
 use std::env;
 
-use crate::data_management::config::{Config, ValueCalculationType};
+use crate::data_management::config::Config;
 use crate::discord::Handler;
 use serenity::{Client, all::GatewayIntents};
 

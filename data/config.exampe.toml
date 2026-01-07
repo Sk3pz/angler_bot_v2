@@ -1,4 +1,5 @@
 [general]
+# The status of the bot when it is online (will not be set if the bot is run in debug mode)
 motd = "Morning! Nice day for fishing, ain't it?"
 
 [fishing]
