@@ -1,17 +1,17 @@
 use std::env;
 
-use serenity::{Client, all::GatewayIntents};
-
+use crate::data_management::config::{Config, ValueCalculationType};
 use crate::discord::Handler;
+use serenity::{Client, all::GatewayIntents};
 
 mod commands;
 pub mod data_management;
 mod discord;
+pub mod embeds;
 pub mod error;
 pub mod fishing;
 pub mod helpers;
 pub mod logging;
-pub mod embeds;
 
 #[tokio::main]
 async fn main() {
@@ -19,7 +19,7 @@ async fn main() {
 
     // Create the data directory if it doesn't exist
     let Ok(exists) = std::fs::exists("./data") else {
-        nay!("Failed to check if guilds directory exists");
+        nay!("Failed to check if data directory exists");
         return;
     };
     if !exists {
@@ -38,6 +38,17 @@ async fn main() {
             nay!("Failed to create guilds directory: {}", e);
             return;
         };
+    }
+
+    // create config.toml if it doesnt exist
+    let Ok(exists) = std::fs::exists("./data/config.toml") else {
+        nay!("Failed to check if the config exists!");
+        return;
+    };
+    if !exists {
+        let default_config = Config::default();
+        // write default config to ./data/config.toml using toml
+        default_config.save();
     }
 
     // get the env variables

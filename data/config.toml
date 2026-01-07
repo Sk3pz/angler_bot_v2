@@ -1,0 +1,10 @@
+[general]
+motd = "Morning! Nice day for fishing, ain't it?"
+
+[fishing]
+# fish_value_calculation - Determines how the value of fish is calculated for the bot. Options include:
+#  - Averaged: Uses a "Fair Market" Approach, averaging the size and weight variations of the fish to affect value
+#     (More stable, less extreme highs and lows)
+#  - Multiplicative: Uses a "Multiplicative" Approach, multiplying the size and weight variations of the fish to affect value
+#     (Way more drastic, Higher highs and lower lows)
+fish_value_calculation = "Multiplicitive"

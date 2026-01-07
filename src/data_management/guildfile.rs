@@ -35,7 +35,7 @@ impl GuildSettings {
     }
 
     pub fn get(id: &GuildId) -> Self {
-        let raw_path = format!("{}/{}.data", GUILDFILE_LOCATION, id);
+        let raw_path = format!("{}/{}.ron", GUILDFILE_LOCATION, id);
         let path = Path::new(&raw_path);
 
         if !path.exists() {
@@ -58,7 +58,7 @@ impl GuildSettings {
     }
 
     fn generate(id: &GuildId) {
-        let raw_path = format!("{}/{}.data", GUILDFILE_LOCATION, id);
+        let raw_path = format!("{}/{}.ron", GUILDFILE_LOCATION, id);
         let path = Path::new(raw_path.as_str());
 
         if path.exists() {
@@ -84,8 +84,6 @@ impl GuildSettings {
             return;
         };
 
-        //let default = "{\"level\":1,\"prestige\":1,\"ascension\":0,\"bananas\":0}".to_string();
-
         if let Err(e) = write!(file, "{}", data) {
             hey!("Failed to write to file for guild {}: {}", id, e);
         }
@@ -96,7 +94,7 @@ impl GuildSettings {
     }
 
     fn update(&self) {
-        let raw_path = format!("{}/{}.data", GUILDFILE_LOCATION, self.id);
+        let raw_path = format!("{}/{}.ron", GUILDFILE_LOCATION, self.id);
         let path = Path::new(raw_path.as_str());
 
         if !path.exists() {

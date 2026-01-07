@@ -64,14 +64,14 @@ impl UserFile {
     #[cfg(feature = "guild_relative_userdata")]
     pub fn get_path(&self) -> String {
         format!(
-            "{}/guilds/{}/users/{}.data",
+            "{}/guilds/{}/users/{}.ron",
             DATA_DIR, self.guild_id, self.user_id
         )
     }
 
     #[cfg(not(feature = "guild_relative_userdata"))]
     pub fn get_path(&self) -> String {
-        format!("{}/users/{}.data", DATA_DIR, self.user_id)
+        format!("{}/users/{}.ron", DATA_DIR, self.user_id)
     }
 
     #[cfg(feature = "guild_relative_userdata")]
