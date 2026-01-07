@@ -2,7 +2,7 @@
 
 use crate::data_management::config::{Config, ValueCalculationType};
 use crate::fishing::rarity::FishRarity;
-use crate::{error::ReelError, fishing::depth::Depth};
+use crate::{data_management::monetary::MonetaryAmount, error::ReelError, fishing::depth::Depth};
 use rand::prelude::IndexedRandom;
 use rand_distr::Distribution;
 use rand_distr::Triangular;
@@ -80,6 +80,8 @@ impl FishType {
         // round value to two decimal places:
         let value = (value.max(1.0) * 100.0).round() / 100.0;
 
+        let value = MonetaryAmount::new(value);
+
         Ok(Fish {
             name: self.name.clone(),
             size,
@@ -98,10 +100,14 @@ impl FishType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Fish {
     pub name: String,
-    pub size: f32,   // the size of the fish in inches
-    pub weight: f32, // the weight of the fish in pounds
-    pub depth: f32,  // the depth in feet the fish was caught at
-    pub value: f32,  // the value of the fish in $
+    /// size of the fish in inches
+    pub size: f32,
+    /// the weight of the fish in pounds
+    pub weight: f32,
+    /// the depth in feet the fish was caught at
+    pub depth: f32,
+    /// the value of the fish in $
+    pub value: MonetaryAmount,
 }
 
 /// Represents a collection of catchable fish types
