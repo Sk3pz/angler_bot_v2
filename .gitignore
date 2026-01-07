@@ -22,5 +22,4 @@ target/
 # generated files
 data/guilds/
 data/users/
-data/config.json
-guilds/
+data/config.toml
