@@ -1,7 +1,8 @@
 use std::env;
 
-use crate::data_management::config::Config;
 use crate::discord::Handler;
+use crate::fishing::fish::FishAttribute;
+use crate::{data_management::config::Config, fishing::fish::FishType};
 use serenity::{Client, all::GatewayIntents};
 
 mod commands;
