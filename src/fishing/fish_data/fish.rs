@@ -42,8 +42,6 @@ impl FishCategory {
     }
 }
 
-// TODO: Fish generation should also take into account the Rod Loadout used.
-
 /// Represents a type of fish that can be caught.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FishType {

@@ -1,0 +1,22 @@
+(
+    fish_types: [
+        (
+            name: "Salmon",
+            rarity: Uncommon,
+            category: Predatory,
+            size_range: (min: 24.0, max: 58.0, average: 36.0),
+            weight_range: (min: 10.0, max: 90.0, average: 30.0),
+            depth_range: (25.0, 150.0),
+            base_value: 50.0
+        ),
+        (
+            name: "Trout",
+            rarity: Common,
+            category: Predatory,
+            size_range: (min: 12.0, max: 30.0, average: 18.0),
+            weight_range: (min: 5.0, max: 20.0, average: 10.0),
+            depth_range: (10.0, 50.0),
+            base_value: 20.0
+        )
+    ]
+)
