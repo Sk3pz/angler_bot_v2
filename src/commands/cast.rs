@@ -240,12 +240,12 @@ command! {
         };
 
         let embed = CreateEmbed::new()
-        .title(format!("You cast your {} into the pond!", loadout.rod.name))
+        .title(format!("🎣 You cast your {} into the pond!", loadout.rod.name))
         //.description(format!("\n**Strange Angler:** *{}*\n\nCast to {}. Waiting for a bite...", random_mysterious_message, depth_display))
         .description("Waiting for a bite...".to_string())
         .fields(vec![
-            ("Cast Depth", format!("{}", depth_display), false),
-            ("Strange Angler", format!("*{}*", random_mysterious_message), false),
+            ("🌊 Cast Depth", format!("{}", depth_display), false),
+            ("🧙 Strange Angler", format!("*{}*", random_mysterious_message), false),
         ])
         .thumbnail("attachment://FishingRod.png")
         .color(0x3498db)
@@ -296,7 +296,7 @@ command! {
                 canceled.store(true, Ordering::Relaxed);
 
                 let update_embed = CreateEmbed::new()
-                    .title("Cast Canceled")
+                    .title("🛑 Cast Canceled")
                     .description("You reeled in your line early.")
                     .color(0x95a5a6); // Grey color
 
@@ -333,6 +333,17 @@ pub async fn catch(catch: CastHandler) {
                                                 .components(vec![]), // Empty components vector removes buttons
     ).await;
 
+    #[cfg(feature = "guild_relative_userdata")]
+    let mut userfile = {
+        let Some(guild_id) = data.guild_id else {
+            command_response_ephemeral(&data.ctx, &data.command,
+                                       "You must be in a guild to execute that command!");
+            return Ok(());
+        };
+
+        crate::data_management::userfile::UserFile::read(&catch.user, catch.interaction.guild_id.unwrap())
+    };
+    #[cfg(not(feature = "guild_relative_userdata"))]
     let mut userfile = crate::data_management::userfile::UserFile::read(&catch.user);
 
     let config = Config::load();
@@ -362,7 +373,7 @@ pub async fn catch(catch: CastHandler) {
     // No fish on the line
     let Some(fish) = &catch.fish else {
         let embed = CreateEmbed::new()
-            .title("Nothing came up!")
+            .title("🍃 Nothing came up!")
             .description("You felt your line go taught but nothing came up. Better luck next time!".to_string())
             .thumbnail("attachment://FishingRod.png")
             .color(0x3498db)
@@ -400,8 +411,8 @@ pub async fn catch(catch: CastHandler) {
     }
     if !caught {
         let embed = CreateEmbed::new()
-            .title("Nothing Came Up!")
-            .description(format!("The fish got away. Better luck next time!\n\nYou lost a {:.2} in {} weighing {:.2} lbs.",
+            .title("💨 The fish got away!")
+            .description(format!("The fish slipped off the hook. Better luck next time!\n\nYou lost a {:.2} in {} weighing {:.2} lbs.",
                                  fish.size, fish.fish_type.name, fish.weight))
             .thumbnail("attachment://FishingRod.png")
             .color(0x3498db)
@@ -455,10 +466,10 @@ pub async fn catch(catch: CastHandler) {
         let time_limit_secs = (base_time / ratio).max(min_time);
 
         let embed = CreateEmbed::new()
-            .title("⚠️ LINE TENSION CRITICAL!")
+            .title("⚠️ LINE TENSION CRITICAL! ⚠️")
             .description(format!("The fish is too heavy! Type the code below in **{:.1}s** to save the line!", time_limit_secs))
             .thumbnail("attachment://FishingRod.png")
-            .field("Type The code!", format!("`{}`", code_display), false)
+            .field("⌨️ Type The code!", format!("`{}`", code_display), false)
             .color(Color::RED)
             .footer(CreateEmbedFooter::new(format!("{}", random_tip())));
 
@@ -491,7 +502,7 @@ pub async fn catch(catch: CastHandler) {
             if user_input.eq_ignore_ascii_case(&code) {
                 // SUCCESS
                 let embed = CreateEmbed::new()
-                    .title("Line Stabilized!")
+                    .title("✅ Line Stabilized!")
                     .description("You managed to reel it in safely.")
                     .color(Color::DARK_GREEN);
 
@@ -507,7 +518,7 @@ pub async fn catch(catch: CastHandler) {
             } else {
                 // FAILURE
                 let embed = CreateEmbed::new()
-                    .title("SNAP!")
+                    .title("💥 SNAP!")
                     .description(format!("You typed the wrong code (`{}`). The line broke!\n\nYou lost a {:.2} in {} weighing {:.2} lbs.",
                                          user_input, fish.size, fish.fish_type.name, fish.weight))
                     .color(Color::RED);
@@ -524,7 +535,7 @@ pub async fn catch(catch: CastHandler) {
         } else {
             // TIMEOUT
             let embed = CreateEmbed::new()
-                .title("SNAP!")
+                .title("💥 SNAP!")
                 .description(format!("You weren't fast enough and your line snapped!\n\nYou lost a {:.2} in {} weighing {:.2} lbs.",
                                      fish.size, fish.fish_type.name, fish.weight))
                 .color(Color::RED);
@@ -551,14 +562,14 @@ pub async fn catch(catch: CastHandler) {
     userfile.update();
 
     let embed = CreateEmbed::new()
-        .title("Fish Caught!")
+        .title("✨ Fish Caught! ✨")
         .description(format!("You caught a **{}**!", fish.fish_type.name))
         .fields(
             vec![
-                ("Size", format!("{:.2} in", fish.size), true),
-                ("Weight", format!("{:.2} lbs", fish.weight), true),
-                ("Value", format!("{}", earnings), false),
-                ("New balance", format!("{}", userfile.file.balance), true),
+                ("📏 Size", format!("{:.2} in", fish.size), true),
+                ("⚖️ Weight", format!("{:.2} lbs", fish.weight), true),
+                ("💲 Value", format!("{}", earnings), false),
+                ("💰 New balance", format!("{}", userfile.file.balance), true),
             ]
         )
         .color(Color::GOLD)

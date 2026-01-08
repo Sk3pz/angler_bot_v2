@@ -82,12 +82,13 @@ impl RodLoadout {
 
         // scale to percentage
         let percentage = (final_chance * 100.0).round() as u32;
-        format!(
-            "{}% (Base: {}% * Multiplier: {:.2})",
-            percentage,
-            (base * 100.0).round() as u32,
-            multiplier
-        )
+        // format!(
+        //     "{}% (Base: {}% * Multiplier: {:.2})",
+        //     percentage,
+        //     (base * 100.0).round() as u32,
+        //     multiplier
+        // )
+        format!("{}%", percentage)
     }
 
     pub fn get_depth_range_display(&self) -> String {
@@ -99,10 +100,11 @@ impl RodLoadout {
 
     pub fn get_total_strength_display(&self) -> String {
         let total_strength = self.total_strength();
-        format!(
-            "{}lbs (Line Strength: {}, Rod Bonus: {:.2}, Sinker Weight: {:.2})",
-            total_strength, self.line.strength, self.rod.strength_bonus, self.sinker.weight
-        )
+        // format!(
+        //     "{}lbs (Line Strength: {}, Rod Bonus: {:.2}, Sinker Weight: {:.2})",
+        //     total_strength, self.line.strength, self.rod.strength_bonus, self.sinker.weight
+        // )
+        format!("{}lbs", total_strength)
     }
 
     pub fn get_speed_multiplier_display(&self) -> String {
@@ -110,13 +112,14 @@ impl RodLoadout {
         let config = Config::load();
         let base_speed = config.fishing.base_cast_wait;
         let final_speed = base_speed / multiplier;
-        format!(
-            "{}s (Base: {}s / (Multiplier: {:.2} * Rod Efficiency: {:.2}))",
-            final_speed.round() as u32,
-            base_speed,
-            multiplier,
-            self.rod.efficiency_multiplier
-        )
+        // format!(
+        //     "{}s (Base: {}s / (Multiplier: {:.2} * Rod Efficiency: {:.2}))",
+        //     final_speed.round() as u32,
+        //     base_speed,
+        //     multiplier,
+        //     self.rod.efficiency_multiplier
+        // )
+        format!("{}s", final_speed.round() as u32, )
     }
 }
 
