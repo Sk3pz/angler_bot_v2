@@ -1,21 +1,29 @@
 use serde::{Deserialize, Serialize};
+use crate::nay;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub enum ValueCalculationType {
     Averaged,
-    Multiplicitive,
+    Multiplicative,
 }
 
 // general section of the config
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct General {
     pub motd: String,
+    pub log_cast_data: bool,
 }
 
 // fishing section of the config
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Fishing {
+    pub fish_weight_time_multiplier: f32,
     pub base_catch_chance: f32,
+    pub base_cast_wait: f32,
+    pub min_cast_wait: f32,
+    pub max_cast_time_variation: f32,
+    pub base_qte_time: f32,
+    pub min_qte_time: f32,
     pub fish_value_calculation: ValueCalculationType,
 }
 
@@ -40,7 +48,8 @@ impl Config {
         let path = std::path::Path::new(raw_path.as_str());
 
         if !path.exists() {
-            panic!("Failed to load config: file does not exist");
+            nay!("Config file does not exist at path: {}", raw_path);
+            return Self::default();
         }
 
         let contents = std::fs::read_to_string(path).unwrap();
@@ -55,7 +64,7 @@ impl Config {
         let config_string = toml::to_string(self).unwrap();
 
         if let Err(e) = std::fs::write(path, config_string) {
-            panic!("Failed to write config: {}", e);
+            nay!("Failed to write config: {}", e);
         }
     }
 }
@@ -65,10 +74,17 @@ impl Default for Config {
         Self {
             general: General {
                 motd: "Welcome to Angler Bot!".to_string(),
+                log_cast_data: false,
             },
             fishing: Fishing {
+                fish_weight_time_multiplier: 1.2,
                 base_catch_chance: 0.5,
-                fish_value_calculation: ValueCalculationType::Multiplicitive,
+                base_cast_wait: 20.0,
+                min_cast_wait: 3.0,
+                max_cast_time_variation: 5.0,
+                base_qte_time: 15.0,
+                min_qte_time: 5.0,
+                fish_value_calculation: ValueCalculationType::Multiplicative,
             },
             bait: BaitConfig {
                 low_bait_weight: 1.5,

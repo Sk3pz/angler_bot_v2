@@ -14,7 +14,6 @@ dotenv = "*"
 tokio = { version = "*", features = ["macros", "rt-multi-thread", "signal"]}
 rand = "*"
 rand_distr = "*"
-lazy_static = "*"
 serde = "*"
 ron = "*"
 toml = "*"

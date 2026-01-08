@@ -9,6 +9,7 @@ command! {
     name: "register",
     desc: "Manage channels that AnglerBot commands can be run in.",
     requires_guild: true,
+    is_admin_command: true,
 
     run: async |data|
 

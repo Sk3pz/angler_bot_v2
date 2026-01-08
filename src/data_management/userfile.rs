@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use serenity::all::GuildId;
 use serenity::all::UserId;
 
-use crate::{data_management::monetary::MonetaryAmount, hey};
+use crate::{data_management::monetary::MonetaryAmount, fishing::rod_data::RodLoadout, hey};
 
 const DATA_DIR: &str = "./data";
 
@@ -28,12 +28,18 @@ const DATA_DIR: &str = "./data";
 pub struct UserValues {
     // stored user values here
     pub balance: MonetaryAmount,
+    pub loadout: RodLoadout,
+    pub caught_fish: Vec<String>,
+    pub total_catches: u64,
 }
 
 impl Default for UserValues {
     fn default() -> Self {
         Self {
             balance: MonetaryAmount::new(100.0),
+            loadout: RodLoadout::default(),
+            caught_fish: Vec::new(),
+            total_catches: 0,
         }
     }
 }
@@ -78,7 +84,7 @@ impl UserFile {
     }
 
     #[cfg(feature = "guild_relative_userdata")]
-    fn read(id: &UserId, guild: &GuildId) -> Self {
+    pub fn read(id: &UserId, guild: &GuildId) -> Self {
         let default_values = UserValues::default();
 
         // create a new user file with default values
@@ -112,7 +118,7 @@ impl UserFile {
     }
 
     #[cfg(not(feature = "guild_relative_userdata"))]
-    fn read(id: &UserId) -> Self {
+    pub fn read(id: &UserId) -> Self {
         let default_values = UserValues::default();
 
         // create a new user file with default values
@@ -205,16 +211,16 @@ impl UserFile {
     }
 
     #[cfg(feature = "guild_relative_userdata")]
-    fn reload(&mut self) {
+    pub fn reload(&mut self) {
         *self = Self::read(&self.user_id, &self.guild_id);
     }
 
     #[cfg(not(feature = "guild_relative_userdata"))]
-    fn reload(&mut self) {
+    pub fn reload(&mut self) {
         *self = Self::read(&self.user_id);
     }
 
-    fn update(&self) {
+    pub fn update(&self) {
         let raw_path = self.get_path();
         let path = Path::new(raw_path.as_str());
 

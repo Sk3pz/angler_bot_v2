@@ -1,8 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-use crate::fishing::{
-    Attribute,
-    rod_data::{bait::Bait, lines::Line, reels::Reel, rods::RodBase, sinkers::Sinker},
+use crate::{
+    data_management::config::Config,
+    fishing::{
+        Attribute,
+        rod_data::{bait::Bait, lines::Line, reels::Reel, rods::RodBase, sinkers::Sinker},
+    },
 };
 
 pub mod bait;
@@ -27,7 +30,7 @@ pub struct RodLoadout {
     pub rod: RodBase,
     /// strength (weight limit)
     pub line: Line,
-    /// fishing speed multiplier
+    /// fishing speed multiplier (higher = faster, 2.0 = 2x)
     pub reel: Reel,
     /// depth range
     pub sinker: Sinker,
@@ -39,7 +42,7 @@ pub struct RodLoadout {
 
 impl RodLoadout {
     pub fn total_strength(&self) -> f32 {
-        self.line.strength as f32 * self.rod.strength_bonus
+        self.line.strength as f32 * self.rod.strength_bonus - self.sinker.weight
     }
 
     pub fn total_speed_multiplier(&self) -> f32 {
@@ -48,6 +51,72 @@ impl RodLoadout {
 
     pub fn catch_chance_multiplier(&self) -> f32 {
         self.rod.sensitivity
+    }
+
+    /// Generate a catch time in seconds, bound by the config
+    pub fn generate_catch_time(&self) -> f32 {
+        let config = Config::load();
+        let base_time = config.fishing.base_cast_wait;
+
+        let multiplier = self.total_speed_multiplier();
+        let standard_time = base_time / multiplier;
+
+        // random variation - Replaced by fish weight calculations in the command
+        // let mut rng = rand::rng();
+        // let allowed_variance = config.fishing.max_cast_time_variation;
+        // let variance_seconds: f32 = rng.random_range(-allowed_variance..=allowed_variance);
+
+        // let final_time = standard_time + variance_seconds;
+
+        // clamp
+        // final_time.max(config.fishing.min_cast_wait)
+        standard_time.max(config.fishing.min_cast_wait)
+    }
+
+    pub fn get_catch_chance_display(&self) -> String {
+        let multiplier = self.catch_chance_multiplier();
+        let config = Config::load();
+        let base = config.fishing.base_catch_chance;
+
+        let final_chance = base * multiplier;
+
+        // scale to percentage
+        let percentage = (final_chance * 100.0).round() as u32;
+        format!(
+            "{}% (Base: {}% * Multiplier: {:.2})",
+            percentage,
+            (base * 100.0).round() as u32,
+            multiplier
+        )
+    }
+
+    pub fn get_depth_range_display(&self) -> String {
+        let min = self.sinker.depth_range.min;
+        let max = self.sinker.depth_range.max;
+        let average = self.sinker.depth_range.average;
+        format!("{}m - {}m (Average: {}m)", min, max, average)
+    }
+
+    pub fn get_total_strength_display(&self) -> String {
+        let total_strength = self.total_strength();
+        format!(
+            "{}lbs (Line Strength: {}, Rod Bonus: {:.2}, Sinker Weight: {:.2})",
+            total_strength, self.line.strength, self.rod.strength_bonus, self.sinker.weight
+        )
+    }
+
+    pub fn get_speed_multiplier_display(&self) -> String {
+        let multiplier = self.total_speed_multiplier();
+        let config = Config::load();
+        let base_speed = config.fishing.base_cast_wait;
+        let final_speed = base_speed / multiplier;
+        format!(
+            "{}s (Base: {}s / (Multiplier: {:.2} * Rod Efficiency: {:.2}))",
+            final_speed.round() as u32,
+            base_speed,
+            multiplier,
+            self.rod.efficiency_multiplier
+        )
     }
 }
 
@@ -66,7 +135,7 @@ impl Default for RodLoadout {
                 strength: 10, // with the Random Branch this will be 8, 7.8 with the Rock Sinker
             },
             reel: Reel {
-                name: "Basic Reel".to_string(),
+                name: "Rusty Can".to_string(),
                 speed_multiplier: 0.8,
             },
             sinker: Sinker {

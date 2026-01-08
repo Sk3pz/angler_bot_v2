@@ -40,6 +40,17 @@ async fn main() {
             return;
         };
     }
+    // create the users and data directory if it doesn't exist
+    let Ok(exists) = std::fs::exists("./data/users") else {
+        nay!("Failed to check if users directory exists");
+        return;
+    };
+    if !exists {
+        if let Err(e) = std::fs::create_dir_all("./data/users") {
+            nay!("Failed to create users directory: {}", e);
+            return;
+        };
+    }
 
     // create config.toml if it doesnt exist
     let Ok(exists) = std::fs::exists("./data/config.toml") else {
@@ -109,7 +120,7 @@ async fn main() {
         | GatewayIntents::MESSAGE_CONTENT;
 
     let Ok(mut client) = Client::builder(token, intents)
-        .event_handler(Handler {})
+        .event_handler(Handler::new())
         .await
     else {
         nay!("Error creating client");

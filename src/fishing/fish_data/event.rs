@@ -1,0 +1,1 @@
+// treasure, item and trash events will be handled here

@@ -12,11 +12,15 @@ use serenity::{
 use crate::nay;
 
 mod admin;
-mod ping;
+mod cast;
+mod game_tips;
+mod info;
 
 pub fn get_all_cmds() -> Vec<Box<dyn BotCommand>> {
     vec![
-        Box::new(ping::PingCommand),
+        // regular commands:
+        Box::new(cast::CastCommand),
+        Box::new(info::InfoCommand),
         // admin commands
         Box::new(admin::register_channel::RegisterChannelCommand),
     ]
@@ -72,7 +76,7 @@ pub async fn error_command_response<S: Into<String>>(
         .choose(&mut rand::rng())
         .expect("Error message list should never be empty!");
 
-    let chosen_response = format!("{}{}", chosen_response, code);
+    let chosen_response = format!("{}`{}`", chosen_response, code);
 
     command_response_ephemeral(ctx, command, chosen_response).await;
 }
@@ -81,6 +85,9 @@ pub async fn error_command_response<S: Into<String>>(
 pub trait BotCommand: Send + Sync {
     fn name(&self) -> &'static str;
     fn requires_guild(&self) -> bool;
+    fn is_admin(&self) -> bool {
+        false
+    }
 
     // returns the builder to send to Discord
     fn register(&self) -> CreateCommand;
@@ -91,6 +98,7 @@ pub trait BotCommand: Send + Sync {
 
 pub struct CommandData<'a> {
     pub command_name: String,
+    pub handler: &'a crate::discord::Handler,
     pub ctx: &'a Context,
     pub command: &'a CommandInteraction,
     pub sender: &'a User,
@@ -301,6 +309,7 @@ macro_rules! command {
         name: $name:expr,
         desc: $desc:expr,
         requires_guild: $req_guild:expr,
+        $( is_admin_command: $is_admin:expr, )?
 
         // Logic Block
         // Parse the pattern |data, arg(description | (autofill_name : choice), ...): type, ...| WITH [PERMISSIONS...] { body }
@@ -321,6 +330,7 @@ macro_rules! command {
         impl crate::commands::BotCommand for $struct_name {
             fn name(&self) -> &'static str { $name }
             fn requires_guild(&self) -> bool { $req_guild }
+            $( fn is_admin(&self) -> bool { $is_admin } )?
 
             fn register(&self) -> serenity::builder::CreateCommand {
                 let mut cmd = serenity::builder::CreateCommand::new($name)
@@ -457,6 +467,7 @@ macro_rules! command {
         struct: $struct_name:ident,
         name: $name:expr,
         desc: $desc:expr,
+        $( is_admin_command: $is_admin:expr, )?
 
         // 1. Capture the EXACT same patterns as Arm 1
         run: async |$data:ident $(, $arg_name:ident ( $arg_desc:literal $(| [ $( $choice_name:literal : $choice_val:literal ),* ] )? ) : $arg_type:ty )*|
@@ -480,6 +491,7 @@ macro_rules! command {
             name: $name,
             desc: $desc,
             requires_guild: false, // <--- Default is applied here
+            $( is_admin_command: $is_admin:expr, )?
 
             // Forward arguments, choices, and descriptions
             run: async |$data $(, $arg_name ( $arg_desc $(| [ $( $choice_name : $choice_val ),* ] )? ) : $arg_type )*|

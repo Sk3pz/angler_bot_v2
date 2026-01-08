@@ -1,10 +1,13 @@
 // fish data will be loaded from a data file
 
+use std::fmt::Display;
 use crate::data_management::config::{Config, ValueCalculationType};
 use crate::fishing::Attribute;
 use crate::fishing::fish_data::rarity::FishRarity;
+use crate::fishing::rod_data::RodLoadout;
 use crate::fishing::rod_data::bait::Bait;
 use crate::{data_management::monetary::MonetaryAmount, error::ReelError, fishing::depth::Depth};
+use rand::Rng;
 use rand_distr::{Distribution, weighted::WeightedIndex};
 use serde::{Deserialize, Serialize};
 
@@ -14,7 +17,7 @@ pub enum FishCategory {
     BaitFish,
     /// Fish that are more likely to be found and are generally easier to catch
     Schooling,
-    /// Agressive fish that are harder to catch (higher line snap chance, requires stronger lines and rods)
+    /// Aggressive fish that are harder to catch (higher line snap chance, requires stronger lines and rods)
     Predatory,
     /// Fish that are more likely to be caught if your sinker is near the bottom of the depth category
     BottomFeeder,
@@ -121,14 +124,14 @@ impl FishType {
         let config = Config::load();
         let value = match config.fishing.fish_value_calculation {
             ValueCalculationType::Averaged => self.averaged_value(size, weight),
-            ValueCalculationType::Multiplicitive => self.multiplicative_value(size, weight),
+            ValueCalculationType::Multiplicative => self.multiplicative_value(size, weight),
         };
 
         let value = (value.max(1.0) * 100.0).round() / 100.0;
         let value = MonetaryAmount::new(value);
 
         Ok(Fish {
-            name: self.name.clone(),
+            fish_type: self.clone(),
             size,
             weight,
             depth: caught_depth,
@@ -138,14 +141,10 @@ impl FishType {
     }
 }
 
-// Fish caught does not store rarity, as rarity only affects likelihood of the fish
-//  being caught. This is different from V1 of Angler Bot
-
 /// Represents an individual fish that can be caught.
-/// TODO: look into storing this in a user's file so they can see their collection of catches
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Fish {
-    pub name: String,
+    pub fish_type: FishType,
     /// size of the fish in inches
     pub size: f32,
     /// the weight of the fish in pounds
@@ -158,6 +157,40 @@ pub struct Fish {
     pub category: FishCategory,
 }
 
+impl Fish {
+    pub fn try_hook(&self, loadout: &RodLoadout) -> bool {
+        let mut rng = rand::rng();
+
+        // base chance
+        let config = Config::load();
+        let base_chance = config.fishing.base_catch_chance;
+
+        // rods sensitivity
+        let rod_mod = loadout.rod.sensitivity;
+
+        let catch_chance = base_chance * rod_mod;
+
+        // fight multiplier
+        let fight_mod = self.category.fight_multiplier();
+
+        // calculation
+        let final_chance = catch_chance / fight_mod;
+
+        // from 0..1
+        rng.random::<f32>() < final_chance
+    }
+}
+
+impl Display for Fish {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{} (Size: {:.1} in, Weight: {:.1} lbs, Depth: {:.1} ft, Value: {})",
+            self.fish_type.name, self.size, self.weight, self.depth, self.value
+        )
+    }
+}
+
 /// Represents a collection of catchable fish types
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Pond {
@@ -165,18 +198,17 @@ pub struct Pond {
 }
 
 impl Pond {
-    pub fn load() -> Self {
+    pub fn load() -> Result<Self, ReelError> {
         let raw_path = "./data/gamedata/fish_types.ron".to_string();
         let path = std::path::Path::new(raw_path.as_str());
 
         if !path.exists() {
-            panic!("Failed to load fish types: file does not exist");
-            // program should not continue if the file does not exist, as it is required for the game to function properly
+            return Err(ReelError::FileLoadFailed("Failed to load fish data!".to_string()));
         }
 
         let contents = std::fs::read_to_string(path).unwrap();
 
-        ron::from_str(contents.as_str()).unwrap()
+        Ok(ron::from_str(contents.as_str()).unwrap())
     }
 
     pub fn save(&self) -> Result<(), ReelError> {

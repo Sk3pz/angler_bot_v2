@@ -1,6 +1,9 @@
+use std::collections::HashSet;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use crate::{
     commands::{
-        CommandData, command_response, command_response_ephemeral, error_command_response,
+        CommandData, command_response_ephemeral, error_command_response,
         get_all_cmds, register_command,
     },
     helpers::generate_error_code,
@@ -13,8 +16,20 @@ use serenity::{
     },
     async_trait,
 };
+use serenity::all::UserId;
+use crate::data_management::guildfile::GuildSettings;
 
-pub struct Handler {}
+pub struct Handler {
+    pub users_fishing: Arc<Mutex<HashSet<UserId>>>,
+}
+
+impl Handler {
+    pub fn new() -> Self {
+        Self {
+            users_fishing: Arc::new(Mutex::new(HashSet::new())),
+        }
+    }
+}
 
 #[async_trait]
 impl EventHandler for Handler {
@@ -90,6 +105,7 @@ impl EventHandler for Handler {
                 // build the data
                 let cmd_data = CommandData {
                     command_name: command_name.clone(),
+                    handler: self,
                     ctx: &ctx,
                     command: &command,
                     sender: &command.user,
@@ -104,13 +120,18 @@ impl EventHandler for Handler {
                 if let Some(cmd) = commands.iter().find(|c| c.name() == cmd_name_str) {
                     // guild-only command check
                     if cmd.requires_guild() && cmd_data.guild_id.is_none() {
-                        command_response(
-                            &ctx,
-                            &command,
-                            "You must be in a server to use that command!",
-                        )
-                        .await;
+                        command_response_ephemeral(&ctx, &command, "You must be in a server to use that command!", ).await;
                         return;
+                    }
+
+                    // guild permissions check
+                    if let Some(guild_id) = command.guild_id {
+                        let guildfile = GuildSettings::get(&guild_id);
+                        if !guildfile.file.fishing_channels.is_empty()
+                            && !guildfile.file.fishing_channels.contains(&command.channel_id.get()) {
+                            command_response_ephemeral(&ctx, &command, "This channel is not allowed for fishing commands!").await;
+                            return;
+                        }
                     }
 
                     // run
