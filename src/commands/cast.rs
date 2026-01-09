@@ -387,16 +387,10 @@ pub async fn catch(catch: CastHandler) {
     // Use up the user's bait if they had any
     if let Some(bait) = &userfile.file.loadout.bait {
         // I don't think this check is needed, but just in case I'll leave it here
-        if bait.use_chance != 0.0 {
-            // generate the chance of the bait being used up
-            // if the bait use_chance is 0.0, it will never be used up. If it is 1.0, it will always be used up.
-            let mut rng = rand::rng();
-            let use_chance: f32 = rng.random_range(0.0..=1.0);
-            if use_chance < bait.use_chance {
-                // bait is used up
-                userfile.file.loadout.bait = None;
-                userfile.update();
-            }
+        if !bait.reusable {
+            // bait is used up
+            userfile.file.loadout.bait = None;
+            userfile.update();
         }
     }
 
