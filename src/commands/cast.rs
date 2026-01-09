@@ -129,13 +129,13 @@ const MISSED_FISH_LINES: &[&str] = &[
 ];
 
 fn missed_fish(fish: &Fish, userfile: &UserFile) -> Vec<(String, String, bool)> {
+    let lost_message = MISSED_FISH_LINES[rand::rng().random_range(0..MISSED_FISH_LINES.len())];
     let lost = if userfile.file.loadout.has_underwater_camera {
         vec![
             ("📹 Underwater Camera".to_string(), format!("You lost a {:.2}' {} weighing {:.2} lbs.", fish.size, fish.fish_type.name, fish.weight), false),
             ("🧙 Strange Angler Darryl".to_string(), format!("That would've been {}!", fish.value), false)
         ]
     } else {
-        let lost_message = MISSED_FISH_LINES[rand::rng().random_range(0..MISSED_FISH_LINES.len())];
         vec![
             ("🧙 Strange Angler Darryl".to_string(), format!("{}", lost_message), false)
         ]
@@ -243,6 +243,7 @@ command! {
             let weight_catch_time = (f.weight - f.fish_type.weight_range.average) * config.fishing.fish_weight_time_multiplier;
             catch_time += weight_catch_time;
         }
+        catch_time = catch_time.max(config.fishing.min_cast_wait).min(config.fishing.max_cast_wait);
 
         // log cast information
         if config.general.log_cast_data {
@@ -288,7 +289,7 @@ command! {
 
                 // Determine message based on duration
                 let message_content = if catch_time >= 180.0 {
-                    "I hope you brought a lunch, because we aren't leaving anytime soon!"
+                    "I hope you brought a lunch, because we aren't leaving anytime soon!\nKeep holding that line tight!"
                 } else if catch_time > 120.0 {
                     "This will take a while!"
                 } else if catch_time > 60.0 {

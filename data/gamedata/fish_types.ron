@@ -415,7 +415,7 @@
         (
             name: "Giant Squid",
             rarity: Legendary,
-            category: Apex, // Technically not a fish, but acts as a boss encounter
+            category: Apex,
             size_range: (min: 200.0, max: 500.0, average: 350.0),
             weight_range: (min: 300.0, max: 1000.0, average: 600.0),
             depth_range: (1000.0, 4000.0),

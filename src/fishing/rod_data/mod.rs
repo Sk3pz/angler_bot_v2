@@ -72,7 +72,7 @@ impl RodLoadout {
 
         // clamp
         // final_time.max(config.fishing.min_cast_wait)
-        standard_time.max(config.fishing.min_cast_wait).min(config.fishing.max_cast_wait)
+        standard_time
     }
 
     pub fn get_catch_chance_display(&self) -> String {
