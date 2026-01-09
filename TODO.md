@@ -3,18 +3,21 @@
 - [ ] Re-implement the original angler bot functionality  
   - [x] Cast line to catch fish  
   - [x] Reel in fish  
-  - [ ] Large amount of fish types to be caught (rebalance and tie into new systems below)  
+  - [x] Large amount of fish types to be caught (rebalance and tie into new systems below)  
   - [ ] Random events while fishing (e.g., junk, treasure, special fish)  
-  - [ ] Shop to buy new rods (rebalance)  
+  - [x] Shop to buy new rods (rebalance)  
   - [ ] Bestiary of fish types caught  
   - [x] Depth and Weight mechanics for fishing  
-  - [ ] Information commands for current rod, money, and stats  
+  - [x] Information commands for current rod, money, and stats  
 - [x] On cast, show esoteric embed with a cancel button at the bottom.  
-- [ ] Inventory system for Rod parts and bait  
-- [ ] Quick Time Events
-  - [ ] If the fish is out of bounds for the rod, a QTE will happen to give the user a chance to catch it
+- [ ] Inventory system
+  - [ ] Bait Bucket
+  - [ ] Junk / Treasure Inventory
+- [ ] Jerrie's Jumble
+- [x] Quick Time Events
+  - [x] If the fish is out of bounds for the rod, a QTE will happen to give the user a chance to catch it
 - [ ] Upgradeable fishing rods  
-  - [ ] Upgrade line and sinks to improve current rod for a lot less than buying a new one  
+  - [x] Upgrade line and sinks to improve current rod
   - [ ] Upgrade chances for better fish, less junk, etc.  
 - [x] Add a bait system  
   - [x] Different baits for different fish  
@@ -32,8 +35,7 @@
 - [ ] Implement weather effects on fishing  
   - [ ] Different fish appear in different weather  
   - [ ] Weather affects catch rates  
-  - [ ] Weather shown in embeds when fishing instead of globally  
-- [ ] Consider Gambling mechanics with fish (would require users keep their fish in their inventory)  
+  - [ ] Weather shown in embeds when fishing instead of globally
 - [ ] Daily quests for fishing  
 - [ ] Story and lore in the world  
   - [x] Strange Angler (Your friend) who you are fishing with

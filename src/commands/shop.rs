@@ -2,11 +2,11 @@ use crate::command;
 use crate::data_management::monetary::MonetaryAmount;
 use crate::data_management::userfile::UserFile;
 use crate::fishing::shop::Shop;
-use chrono::Local; // Added for time calculation
+use chrono::Local;
 use serenity::all::{
     ButtonStyle, ComponentInteractionDataKind, CreateActionRow, CreateButton, CreateEmbed,
     CreateEmbedFooter, CreateInteractionResponse, CreateInteractionResponseMessage,
-    EditInteractionResponse,
+    EditInteractionResponse, // We use this instead of EditMessage
 };
 use serenity::futures::StreamExt;
 use std::time::Duration;
@@ -176,8 +176,16 @@ command! {
         }
 
         // --- Timeout Handling ---
-        // This block runs after the loop ends (due to timeout)
-        let _ = message.delete(&data.ctx.http).await;
+        // We use data.command.edit_response because the message is ephemeral.
+        let closed_embed = CreateEmbed::new()
+            .title("🛒 Angler Shop - Closed")
+            .description("Shop closed to save resources.\nReopen with `/shop` to continue browsing.")
+            .color(0x2B2D31);
+
+        let _ = data.command.edit_response(&data.ctx.http, EditInteractionResponse::new()
+            .embed(closed_embed)
+            .components(vec![]) // Removes all buttons
+        ).await;
 
         Ok(())
     }
@@ -307,7 +315,7 @@ fn build_shop_embed(
         description.push_str(&format!("### {} {}\n\n", icon, msg));
     }
 
-    // Category Info (Balance moved to footer logic)
+    // Category Info
     description.push_str(&format!("ℹ️ *{}*\n", category.description()));
     description.push_str(&format!("💳 **Balance:** {}\n\n", user_file.file.balance));
 
@@ -372,7 +380,6 @@ fn build_shop_embed(
     // --- Footer Logic with Time Calculation ---
     let now = Local::now();
     let tomorrow_midnight = now.date_naive().succ_opt().unwrap().and_hms_opt(0, 0, 0).unwrap();
-    // Reconstruct into DateTime<Local> to subtract safely
     let tomorrow_midnight_local = tomorrow_midnight.and_local_timezone(Local).unwrap();
 
     let duration = tomorrow_midnight_local - now;
