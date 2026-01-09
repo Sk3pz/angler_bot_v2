@@ -256,7 +256,9 @@ fn handle_purchase(
             price = item.price;
             item_name = item.name.clone();
             if balance < price { return Err(format!("Insufficient funds! Need ${:.2}", price)); }
-            user_file.file.loadout.bait = Some(item.clone());
+            //user_file.file.loadout.bait = Some(item.clone());
+            // add to the user's bait bucket instead of loadout, since bait is consumable
+            user_file.file.bait_bucket.add(item.clone());
         },
         ShopCategory::Unique => {
             let item = UNIQUE_ITEMS.get(index).ok_or("Item not found")?;

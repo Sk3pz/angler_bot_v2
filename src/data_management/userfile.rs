@@ -10,6 +10,7 @@ use serenity::all::GuildId;
 use serenity::all::UserId;
 
 use crate::{data_management::monetary::MonetaryAmount, fishing::rod_data::RodLoadout, hey};
+use crate::fishing::bait_bucket::BaitBucket;
 
 const DATA_DIR: &str = "./data";
 
@@ -31,6 +32,7 @@ pub struct UserValues {
     pub loadout: RodLoadout,
     pub caught_fish: Vec<String>,
     pub total_catches: u64,
+    pub bait_bucket: BaitBucket,
 }
 
 impl Default for UserValues {
@@ -40,6 +42,7 @@ impl Default for UserValues {
             loadout: RodLoadout::default(),
             caught_fish: Vec::new(),
             total_catches: 0,
+            bait_bucket: BaitBucket::default(),
         }
     }
 }

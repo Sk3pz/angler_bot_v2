@@ -26,7 +26,7 @@
       - [ ] Lore stories & descriptions
   - [ ] Treasure - random amount of money or a random item (e.g., bait, rod upgrade - do you want to use it? prompt, etc.)  
   - [ ] ~~Legendary Fish - rare fish with unique names and descriptions that can be caught (i.e. Loch Ness Monster, Giant Squid, etc.)~~  
-          (Moved to Mythcial rarity, but are treated as normal fish)  
+          (Moved to Mythical rarity, but are treated as normal fish)  
   - [ ] Seasonal Fish - fish that can only be caught during certain times of the year (e.g., Christmas fish, Halloween fish, etc.)  
           (Planned for distant future update)  
   - [ ] Angler's Anomaly - Some random events that can occur while fishing that provide lore / story to the game world  
