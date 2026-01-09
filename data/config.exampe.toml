@@ -13,8 +13,10 @@ fish_weight_time_multiplier = 1.2
 base_catch_chance = 0.5
 # The base amount of time with no modifiers from cast to catch, in seconds
 base_cast_wait = 20.0
-# The minimum amount of time to wait between casts, in seconds
+# The minimum amount of time to wait for casts, in seconds
 min_cast_wait = 3.0
+# The maximum amount of time to wait for casts, in seconds
+max_cast_wait = 180.0
 # The maximum amount of time that can be added or subtracted from a generated cast time
 max_cast_time_variation = 5.0
 # The base amount of time for quick time events in seconds

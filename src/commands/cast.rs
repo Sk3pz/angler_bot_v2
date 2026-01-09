@@ -272,6 +272,81 @@ command! {
             interaction: data.command.clone(),
         };
 
+        if catch_time > 40.0 {
+            let ctx = data.ctx.clone();
+            let channel = data.channel.clone();
+            let user_id = data.sender.id;
+            let canceled_clone = canceled.clone();
+
+            tokio::spawn(async move {
+                // Wait for 25% of the duration
+                let first_wait = (catch_time * 0.25) as u64;
+                tokio::time::sleep(Duration::from_secs(first_wait)).await;
+
+                // Check if user canceled
+                if canceled_clone.load(Ordering::Relaxed) { return; }
+
+                // Determine message based on duration
+                let message_content = if catch_time >= 180.0 {
+                    "I hope you brought a lunch, because we aren't leaving anytime soon!"
+                } else if catch_time > 120.0 {
+                    "This will take a while!"
+                } else if catch_time > 60.0 {
+                    "This could take a minute!"
+                } else {
+                    "That's a big one! Hold on tight!"
+                };
+
+                // Send first warning
+                let embed = CreateEmbed::new()
+                    .title("🧙 Strange Angler Darryl")
+                    .description(format!("*{}*", message_content))
+                    .thumbnail("attachment://darryl.png")
+                    .color(0x3498db); // Match water color
+
+                let mut msg = CreateMessage::new()
+                    .content(user_id.mention().to_string())
+                    .embed(embed);
+
+                if let Ok(file) = CreateAttachment::path("./assets/darryl.png").await {
+                    msg = msg.add_file(file);
+                }
+
+                let _ = channel.send_message(&ctx, msg).await;
+
+                // Wait until 10 seconds remaining
+                // We have already slept for `first_wait` seconds.
+                // We need to sleep until `catch_time - 10`.
+                let target_time = catch_time - 10.0;
+
+                // Ensure we don't try to sleep negative time or if the interval is too small
+                if target_time > (first_wait as f32) {
+                    let remaining_wait = target_time - (first_wait as f32);
+                    tokio::time::sleep(Duration::from_secs(remaining_wait as u64)).await;
+
+                    // Check if user canceled again
+                    if canceled_clone.load(Ordering::Relaxed) { return; }
+
+                    // Send final warning
+                    let embed_final = CreateEmbed::new()
+                        .title("🧙 Strange Angler Darryl")
+                        .description("*It's almost here! You better be ready!*")
+                        .thumbnail("attachment://darryl.png")
+                        .color(0x3498db);
+
+                    let mut msg_final = CreateMessage::new()
+                        .content(user_id.mention().to_string())
+                        .embed(embed_final);
+
+                    if let Ok(file) = CreateAttachment::path("./assets/darryl.png").await {
+                        msg_final = msg_final.add_file(file);
+                    }
+
+                    let _ = channel.send_message(&ctx, msg_final).await;
+                }
+            });
+        }
+
         // schedule the catch
         tokio::spawn(async move {
             tokio::time::sleep(Duration::from_secs(catch_time as u64)).await;
@@ -295,7 +370,7 @@ command! {
         .description("Waiting for a bite...".to_string())
         .fields(vec![
             ("🌊 Cast Depth", format!("{}", depth_display), false),
-            ("🧙 Strange Angler Darryl", format!("*{}*", random_mysterious_message), false), // TODO: strange angler's name is darryl
+            ("🧙 Strange Angler Darryl", format!("*{}*", random_mysterious_message), false),
         ])
         .thumbnail("attachment://darryl.png")
         .color(0x3498db)
