@@ -54,7 +54,7 @@ command! {
         let embed = CreateEmbed::new()
             .title(format!("🎣 Angler Profile: {}", data.sender.display_name()))
             .color(0x00A2FF) // Nice Ocean Blue
-            .thumbnail("attachment://rod_with_fish.png")
+            //.thumbnail("attachment://rod_with_fish.png")
 
             // Profile Stats
             .description(format!(
@@ -85,12 +85,13 @@ command! {
             .field("📟 Tech & Accessories", tech_display, true);
 
         // --- Send Response ---
-        let mut message = CreateInteractionResponseMessage::new().embed(embed);
+        let message = CreateInteractionResponseMessage::new().embed(embed);
+        //let mut message = CreateInteractionResponseMessage::new().embed(embed);
 
-        let attachment = CreateAttachment::path("./assets/rod_with_fish.png").await;
-        if let Ok(file) = attachment {
-            message = message.add_file(file);
-        }
+        // let attachment = CreateAttachment::path("./assets/rod_with_fish.png").await;
+        // if let Ok(file) = attachment {
+        //     message = message.add_file(file);
+        // }
 
         let builder = CreateInteractionResponse::Message(message);
         if let Err(e) = data.command.create_response(&data.ctx, builder).await {
