@@ -2,9 +2,10 @@ use crate::command;
 use crate::data_management::monetary::MonetaryAmount;
 use crate::data_management::userfile::UserFile;
 use crate::fishing::shop::Shop;
+use chrono::Local; // Added for time calculation
 use serenity::all::{
     ButtonStyle, ComponentInteractionDataKind, CreateActionRow, CreateButton, CreateEmbed,
-    CreateInteractionResponse, CreateInteractionResponseMessage,
+    CreateEmbedFooter, CreateInteractionResponse, CreateInteractionResponseMessage,
     EditInteractionResponse,
 };
 use serenity::futures::StreamExt;
@@ -66,7 +67,6 @@ impl ShopCategory {
     }
 }
 
-// Hardcoded definitions for Unique Items to keep shop.rs clean
 struct UniqueItem {
     name: &'static str,
     price: f32,
@@ -115,10 +115,10 @@ command! {
         data.command.create_response(&data.ctx.http, CreateInteractionResponse::Message(response)).await.map_err(|e| e.to_string())?;
 
         // Component Interaction Loop
-        let mut message = data.command.get_response(&data.ctx.http).await.map_err(|e| e.to_string())?;
+        let message = data.command.get_response(&data.ctx.http).await.map_err(|e| e.to_string())?;
 
         let mut collector = message.await_component_interactions(&data.ctx.shard)
-            .timeout(Duration::from_secs(120))
+            .timeout(Duration::from_secs(120)) // 120 Seconds Timeout
             .stream();
 
         while let Some(interaction) = collector.next().await {
@@ -174,6 +174,10 @@ command! {
                 CreateInteractionResponseMessage::new().embed(embed).components(build_shop_components())
             )).await;
         }
+
+        // --- Timeout Handling ---
+        // This block runs after the loop ends (due to timeout)
+        let _ = message.delete(&data.ctx.http).await;
 
         Ok(())
     }
@@ -253,7 +257,6 @@ fn handle_purchase(
 
             if balance < price { return Err(format!("Insufficient funds! Need ${:.2}", price)); }
 
-            // Logic to apply unique items
             match index {
                 0 => { // Depth Finder
                     if user_file.file.loadout.has_depth_finder {
@@ -262,7 +265,6 @@ fn handle_purchase(
                     user_file.file.loadout.has_depth_finder = true;
                 },
                 1 => { // Underwater Camera
-                    // Ensure 'has_underwater_camera' exists in RodLoadout
                     if user_file.file.loadout.has_underwater_camera {
                         return Err("You already own an Underwater Camera!".to_string());
                     }
@@ -299,17 +301,17 @@ fn build_shop_embed(
 
     let mut description = String::new();
 
-    // 1. Transaction Feedback Banner
+    // Transaction Feedback Banner
     if let Some((success, msg)) = feedback {
         let icon = if *success { "✅" } else { "❌" };
         description.push_str(&format!("### {} {}\n\n", icon, msg));
     }
 
-    // 2. Balance & Category Info
-    description.push_str(&format!("💳 **Balance:** {}\n", user_file.file.balance));
-    description.push_str(&format!("ℹ️ *{}*\n\n", category.description()));
+    // Category Info (Balance moved to footer logic)
+    description.push_str(&format!("ℹ️ *{}*\n", category.description()));
+    description.push_str(&format!("💳 **Balance:** {}\n\n", user_file.file.balance));
 
-    // 3. Item List Construction
+    // Item List Construction
     let mut add_item_line = |index: usize, name: &str, price: f32, desc: &str, is_owned: bool| {
         let owned_mark = if is_owned { " (Owned)" } else { "" };
 
@@ -367,10 +369,24 @@ fn build_shop_embed(
         },
     }
 
+    // --- Footer Logic with Time Calculation ---
+    let now = Local::now();
+    let tomorrow_midnight = now.date_naive().succ_opt().unwrap().and_hms_opt(0, 0, 0).unwrap();
+    // Reconstruct into DateTime<Local> to subtract safely
+    let tomorrow_midnight_local = tomorrow_midnight.and_local_timezone(Local).unwrap();
+
+    let duration = tomorrow_midnight_local - now;
+    let hours = duration.num_hours();
+    let minutes = duration.num_minutes() % 60;
+
     CreateEmbed::new()
         .title(format!("🛒 Angler Shop - {}", category.name()))
         .description(description)
         .color(0x2B2D31)
+        .footer(CreateEmbedFooter::new(format!(
+            "Bait refresh in: {}h {}m",
+            hours, minutes
+        )))
 }
 
 fn build_shop_components() -> Vec<CreateActionRow> {

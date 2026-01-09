@@ -6,7 +6,7 @@
         strength: 5,
     ),
     (
-        name: "Monofilament",
+        name: "Plastic Line",
         description: "Stretchy clear plastic line. Good for absorbing shock from small fish.",
         price: 50.0,
         strength: 10,
