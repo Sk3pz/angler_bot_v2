@@ -26,8 +26,22 @@ impl fmt::Display for MonetaryAmount {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let dollars = self.amount_x100 / 100;
         let cents = self.amount_x100 % 100;
+        // Convert to string to access characters
+        let dollars_str = dollars.to_string();
+        let len = dollars_str.len();
+        let mut dollars_display = String::with_capacity(len + (len / 3));
+
+        // Iterate through characters and insert commas
+        for (i, c) in dollars_str.chars().enumerate() {
+            // Insert a comma if we are not at the start
+            // and the remaining digits are a multiple of 3
+            if i > 0 && (len - i) % 3 == 0 {
+                dollars_display.push(',');
+            }
+            dollars_display.push(c);
+        }
         // {:02} ensures 5 cents prints as "05" not "5"
-        write!(f, "${}.{:02}", dollars, cents)
+        write!(f, "${}.{:02}", dollars_display, cents)
     }
 }
 
