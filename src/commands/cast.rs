@@ -490,7 +490,7 @@ pub async fn catch(catch: CastHandler) {
             // User Replied
             let user_input = msg.content.replace(" ", "");
 
-            // be nice and ingore case
+            // be nice and ignore case
             if user_input.eq_ignore_ascii_case(&code) {
                 // SUCCESS
                 let embed = CreateEmbed::new()
@@ -509,6 +509,11 @@ pub async fn catch(catch: CastHandler) {
                 // dont return, proceed to successful catch handling
             } else {
                 // FAILURE
+
+                // remove any bait the user may have
+                userfile.file.loadout.bait = None;
+                userfile.update();
+
                 let embed = CreateEmbed::new()
                     .title("💥 SNAP!")
                     .description(format!("You typed the wrong code (`{}`). The line broke!\n\nYou lost a {:.2} in {} weighing {:.2} lbs.",
@@ -526,6 +531,11 @@ pub async fn catch(catch: CastHandler) {
             }
         } else {
             // TIMEOUT
+
+            // remove any bait the user may have
+            userfile.file.loadout.bait = None;
+            userfile.update();
+
             let embed = CreateEmbed::new()
                 .title("💥 SNAP!")
                 .description(format!("You weren't fast enough and your line snapped!\n\nYou lost a {:.2} in {} weighing {:.2} lbs.",

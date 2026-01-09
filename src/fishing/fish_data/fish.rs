@@ -257,7 +257,25 @@ impl Pond {
         let rarity = FishRarity::weighted_random(bait);
 
         let depth = Depth::from_depth(raw_depth);
-        let available_fish = self.get_available_fish(depth, rarity);
+        let mut available_fish = self.get_available_fish(depth.clone(), rarity);
+
+        if let Some(bait) = bait {
+            if let Some((target_name, _)) = bait.get_specific_fish_modifier() {
+                // Find the fish in the full list
+                if let Some(target_fish) = self.fish_types.iter().find(|f| f.name == *target_name) {
+                    // Check depth compatibility manually
+                    let (min_depth, max_depth) = target_fish.depth_range;
+                    let (depth_min, depth_max) = depth.get_range();
+
+                    if (min_depth <= depth_max) || (max_depth >= depth_min) {
+                        // If it's not already in the list (because it was too rare), add it now
+                        if !available_fish.fish_types.iter().any(|f| f.name == target_fish.name) {
+                            available_fish.fish_types.push(target_fish.clone());
+                        }
+                    }
+                }
+            }
+        }
 
         if available_fish.fish_types.is_empty() {
             return Ok(None);

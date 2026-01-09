@@ -75,14 +75,14 @@ struct UniqueItem {
 
 const UNIQUE_ITEMS: &[UniqueItem] = &[
     UniqueItem {
-        name: "Depth Finder",
-        price: 5000.0,
-        description: "Reveals the exact depth your line reaches when casting.",
-    },
-    UniqueItem {
         name: "Underwater Camera",
         price: 2500.0,
         description: "Allows you to see which fish got away if your line snaps.",
+    },
+    UniqueItem {
+        name: "Depth Finder",
+        price: 5000.0,
+        description: "Reveals the exact depth your line reaches when casting.",
     },
 ];
 
@@ -268,17 +268,17 @@ fn handle_purchase(
             if balance < price { return Err(format!("Insufficient funds! Need ${:.2}", price)); }
 
             match index {
-                0 => { // Depth Finder
-                    if user_file.file.loadout.has_depth_finder {
-                        return Err("You already own a Depth Finder!".to_string());
-                    }
-                    user_file.file.loadout.has_depth_finder = true;
-                },
-                1 => { // Underwater Camera
+                0 => { // Underwater Camera
                     if user_file.file.loadout.has_underwater_camera {
                         return Err("You already own an Underwater Camera!".to_string());
                     }
                     user_file.file.loadout.has_underwater_camera = true;
+                },
+                1 => { // Depth Finder
+                    if user_file.file.loadout.has_depth_finder {
+                        return Err("You already own a Depth Finder!".to_string());
+                    }
+                    user_file.file.loadout.has_depth_finder = true;
                 },
                 _ => return Err("Unknown Item".to_string()),
             }

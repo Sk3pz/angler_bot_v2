@@ -1,6 +1,5 @@
 use rand::prelude::IndexedRandom;
 use rand::Rng;
-use rand::seq::SliceRandom;
 use serde::{Deserialize, Serialize};
 
 use crate::{data_management::config::Config, fishing::fish_data::{fish::FishCategory, rarity::FishRarity}, nay};
@@ -24,6 +23,7 @@ impl BaitBias {
         }
     }
 
+    /// Returns a normalized value between 0.0 and 1.0 based on the highest configured weight.
     pub fn get_normalized_strength(&self) -> f32 {
         let config = Config::load();
 
@@ -35,15 +35,6 @@ impl BaitBias {
 
         let max = config.bait.high_bait_weight.max(1.0);
         (val / max).clamp(0.0, 1.0)
-    }
-
-    // Helper to score the bias for pricing
-    fn score(&self) -> f32 {
-        match self {
-            BaitBias::Low => 1.0,
-            BaitBias::Medium => 2.5,
-            BaitBias::High => 5.0,
-        }
     }
 }
 
@@ -59,43 +50,13 @@ pub enum BaitAttraction {
     Category(FishCategory, BaitBias),
 }
 
-impl BaitAttraction {
-    // Calculate a "value score" for this specific attraction
-    fn get_value_score(&self) -> f32 {
-        match self {
-            // Stats are basic
-            BaitAttraction::Heavy { bias } |
-            BaitAttraction::Light { bias } |
-            BaitAttraction::Large { bias } |
-            BaitAttraction::Small { bias } => 10.0 * bias.score(),
-
-            // Categories are specialized
-            BaitAttraction::Category(_, bias) => 25.0 * bias.score(),
-
-            // Specific fish are very specialized
-            BaitAttraction::SpecificFish { .. } => 35.0 * 2.0, // Usually high impact
-
-            // Rarities are the most valuable
-            BaitAttraction::Rarity(rarity, bias) => {
-                let rarity_mult = match rarity {
-                    FishRarity::Common => 1.0,
-                    FishRarity::Uncommon => 1.5,
-                    FishRarity::Rare => 3.0,
-                    FishRarity::Elusive => 5.0,
-                    FishRarity::Legendary => 10.0,
-                    FishRarity::Mythical => 25.0,
-                };
-                20.0 * rarity_mult * bias.score()
-            }
-        }
-    }
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Bait {
     pub name: String,
     pub description: String,
     pub price: f32,
+    /// Chance the bait will be used up after a catch.
+    /// 0.0 means it will never be used up, 1.0 means it will always be used up.
     pub use_chance: f32,
     pub attraction: Vec<BaitAttraction>,
 }
@@ -176,15 +137,21 @@ impl BaitData {
 }
 
 impl Bait {
-    /// Generates a random bait based on the provided potency.
+    /// Generates a random bait or lure based on the provided potency.
     pub fn generate(potency: BaitPotency) -> Self {
         let mut rng = rand::rng();
-        let data = BaitData::load();
-        let base_name = data.base_names.choose(&mut rng).cloned().unwrap_or_else(|| "Bait".to_string());
+
+        // 10% chance to be a Lure (Infinite use, higher cost)
+        // Lures are more common in higher potencies
+        let is_lure = match potency {
+            BaitPotency::Low => rng.random_bool(0.05),
+            BaitPotency::Medium => rng.random_bool(0.15),
+            BaitPotency::High => rng.random_bool(0.25),
+        };
 
         let mut attractions = Vec::new();
 
-        // Define generation rules based on user request
+        // Define generation rules
         match potency {
             BaitPotency::Low => {
                 let count = rng.random_range(1..=2);
@@ -212,53 +179,53 @@ impl Bait {
             },
         }
 
-        let name = Self::generate_name(&base_name, &attractions);
-        let description = Self::generate_description(&attractions);
+        let name: String;
+        let use_chance: f32;
+        let price_multiplier: f32;
 
-        // --- NEW PRICING LOGIC ---
-        // 1. Calculate raw score based on stats
-        let mut score: f32 = attractions.iter().map(|a| a.get_value_score()).sum();
+        if is_lure {
+            // Lure Logic
+            let base = "Lure";
+            name = Self::generate_name(base, &attractions);
+            use_chance = 0.0; // Infinite use
+            price_multiplier = 10.0; // Much more expensive
+        } else {
+            // Organic Bait Logic
+            let data = BaitData::load();
+            let base = data.base_names.choose(&mut rng).cloned().unwrap_or_else(|| "Worm".to_string());
+            name = Self::generate_name(&base, &attractions);
+            use_chance = 1.0; // Single use
+            price_multiplier = 1.0;
+        }
 
-        // 2. Add random variance (+/- 15%) so players can't perfectly math it out
-        let variance = rng.random_range(0.85..1.15);
-        score *= variance;
+        let description = Self::generate_description(&attractions, is_lure);
 
-        // 3. Ensure minimum prices based on Potency Tier
-        // (Prevents a "High" tier bait that rolled unlucky stats from being $5)
-        let min_price = match potency {
-            BaitPotency::Low => 5.0,
-            BaitPotency::Medium => 50.0,
-            BaitPotency::High => 250.0,
+        // Price calculation
+        let base_price = match potency {
+            BaitPotency::Low => rng.random_range(5.0..20.0),
+            BaitPotency::Medium => rng.random_range(50.0..150.0),
+            BaitPotency::High => rng.random_range(300.0..800.0),
         };
 
-        let calculated_price = score.max(min_price);
+        let final_price = base_price * price_multiplier;
 
         Bait {
             name,
             description,
-            price: (calculated_price * 100.0).round() / 100.0,
-            use_chance: 1.0,
+            price: (final_price * 100.0).round() / 100.0,
+            use_chance,
             attraction: attractions,
         }
     }
 
     fn generate_random_attraction(rng: &mut impl Rng, bias: BaitBias) -> BaitAttraction {
         let roll = rng.random_range(0..100);
-
         match roll {
             0..=29 => {
-                if rng.random_bool(0.5) {
-                    BaitAttraction::Large { bias }
-                } else {
-                    BaitAttraction::Small { bias }
-                }
+                if rng.random_bool(0.5) { BaitAttraction::Large { bias } } else { BaitAttraction::Small { bias } }
             },
             30..=59 => {
-                if rng.random_bool(0.5) {
-                    BaitAttraction::Heavy { bias }
-                } else {
-                    BaitAttraction::Light { bias }
-                }
+                if rng.random_bool(0.5) { BaitAttraction::Heavy { bias } } else { BaitAttraction::Light { bias } }
             },
             60..=84 => {
                 let categories = [
@@ -297,8 +264,7 @@ impl Bait {
                     FishCategory::Mythological => "Mystic",
                 };
             }
-        }
-        else if let Some(rar_attr) = attractions.iter().find(|a| matches!(a, BaitAttraction::Rarity(_, _))) {
+        } else if let Some(rar_attr) = attractions.iter().find(|a| matches!(a, BaitAttraction::Rarity(_, _))) {
             if let BaitAttraction::Rarity(rar, _) = rar_attr {
                 prefix = match rar {
                     FishRarity::Common => "Common",
@@ -306,11 +272,10 @@ impl Bait {
                     FishRarity::Rare => "Rare",
                     FishRarity::Elusive => "Elusive",
                     FishRarity::Legendary => "Legendary",
-                    FishRarity::Mythical => "Godly",
+                    FishRarity::Mythical => "Mythical",
                 };
             }
-        }
-        else if let Some(stat_attr) = attractions.iter().find(|a| matches!(a, BaitAttraction::Large{..} | BaitAttraction::Heavy{..} | BaitAttraction::Small{..} | BaitAttraction::Light{..})) {
+        } else if let Some(stat_attr) = attractions.iter().find(|a| matches!(a, BaitAttraction::Large{..} | BaitAttraction::Heavy{..} | BaitAttraction::Small{..} | BaitAttraction::Light{..})) {
             match stat_attr {
                 BaitAttraction::Large { .. } => prefix = "Big",
                 BaitAttraction::Small { .. } => prefix = "Tiny",
@@ -327,7 +292,7 @@ impl Bait {
         }
     }
 
-    fn generate_description(attractions: &[BaitAttraction]) -> String {
+    fn generate_description(attractions: &[BaitAttraction], is_lure: bool) -> String {
         let attr_desc: Vec<String> = attractions.iter().map(|a| match a {
             BaitAttraction::Heavy { .. } => "heavier fish".to_string(),
             BaitAttraction::Light { .. } => "lighter fish".to_string(),
@@ -336,9 +301,9 @@ impl Bait {
             BaitAttraction::Category(c, _) => format!("{:?} fish", c),
             BaitAttraction::Rarity(r, _) => format!("{} fish", r),
             BaitAttraction::SpecificFish { name, .. } => format!("{}", name),
-            _ => "fish".to_string(),
         }).collect();
 
-        format!("A bait that attracts {}.", attr_desc.join(", "))
+        let type_str = if is_lure { "A reusable lure" } else { "A bait" };
+        format!("{} that attracts {}.", type_str, attr_desc.join(", "))
     }
 }
