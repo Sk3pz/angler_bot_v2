@@ -38,6 +38,8 @@ pub struct RodLoadout {
     pub bait: Option<Bait>,
     /// purchasable item to tell you what depth you hit while casting.
     pub has_depth_finder: bool,
+    /// purchasable item to view the fish you miss
+    pub has_underwater_camera: bool,
 }
 
 impl RodLoadout {
@@ -159,6 +161,7 @@ impl Default for RodLoadout {
             },
             bait: None,
             has_depth_finder: false,
+            has_underwater_camera: false,
         }
     }
 }

@@ -61,11 +61,15 @@ command! {
         let mut category = ShopCategory::Rods;
         let mut item_index = 0;
 
+        // Store feedback (Success/Failure, Message)
+        let mut feedback: Option<(bool, String)> = None;
+
         // Initial Embed Construction
         #[cfg(feature = "guild_relative_userdata")]
-        let embed = build_shop_embed(&shop, category, item_index, data.sender.id, data.guild_id);
+        let embed = build_shop_embed(&shop, category, item_index, data.sender.id, data.guild_id, &feedback);
         #[cfg(not(feature = "guild_relative_userdata"))]
-        let embed = build_shop_embed(&shop, category, item_index, data.sender.id);
+        let embed = build_shop_embed(&shop, category, item_index, data.sender.id, &feedback);
+
         let components = build_shop_components();
 
         let response = CreateInteractionResponseMessage::new()
@@ -88,7 +92,9 @@ command! {
                 _ => continue,
             };
 
-            let mut feedback = None;
+            if custom_id != "shop_buy" {
+                feedback = None;
+            }
 
             // Handle Navigation & Buying
             match custom_id.as_str() {
@@ -114,13 +120,13 @@ command! {
                 "shop_buy" => {
                     #[cfg(not(feature = "guild_relative_userdata"))]
                     match handle_purchase(&shop, category, item_index, data) {
-                        Ok(msg) => feedback = Some(msg),
-                        Err(msg) => feedback = Some(msg),
+                        Ok(msg) => feedback = Some((true, msg)),
+                        Err(msg) => feedback = Some((false, msg)),
                     }
                     #[cfg(feature = "guild_relative_userdata")]
                     match handle_purchase(&shop, category, item_index, data, data.guild_id) {
-                        Ok(msg) => feedback = Some(msg),
-                        Err(msg) => feedback = Some(msg),
+                        Ok(msg) => feedback = Some((true, msg)),
+                        Err(msg) => feedback = Some((false, msg)),
                     }
                 },
                 _ => {}
@@ -128,16 +134,10 @@ command! {
 
             // Rebuild UI
             #[cfg(feature = "guild_relative_userdata")]
-            let mut embed = build_shop_embed(&shop, category, item_index, data.sender.id, data.guild_id);
+            let mut embed = build_shop_embed(&shop, category, item_index, data.sender.id, data.guild_id, &feedback);
             #[cfg(not(feature = "guild_relative_userdata"))]
-            let mut embed = build_shop_embed(&shop, category, item_index, data.sender.id);
+            let mut embed = build_shop_embed(&shop, category, item_index, data.sender.id, &feedback);
 
-            // Add feedback field if purchase attempted
-            if let Some(msg) = feedback {
-                embed = embed.field("Transaction", msg, false);
-            }
-
-            // Acknowledge and Update
             let _ = interaction.create_response(&data.ctx.http, CreateInteractionResponse::UpdateMessage(
                 CreateInteractionResponseMessage::new().embed(embed).components(build_shop_components())
             )).await;
@@ -165,11 +165,9 @@ fn handle_purchase(
     #[cfg(feature = "guild_relative_userdata")]
     guild_id: Option<&serenity::all::GuildId>
 ) -> Result<String, String> {
-    // Load User Data
     #[cfg(feature = "guild_relative_userdata")]
     let mut user_file = {
-        let guild_id = guild_id.expect("Bruh?? Guild ID should be present here but wasn't; shop.rs - handle_purchase");
-
+        let guild_id = guild_id.expect("Guild ID should be present here");
         UserFile::read(&data.sender.id, guild_id)
     };
     #[cfg(not(feature = "guild_relative_userdata"))]
@@ -179,63 +177,49 @@ fn handle_purchase(
     let price;
     let item_name;
 
-    // Check Price and Item
     match category {
         ShopCategory::Rods => {
             let item = shop.rods.get(index).ok_or("Item not found")?;
             price = item.price;
             item_name = item.name.clone();
-
             if balance < price { return Err(format!("Insufficient funds! Need ${:.2}", price)); }
-
             user_file.file.loadout.rod = item.clone();
         },
         ShopCategory::Reels => {
             let item = shop.reels.get(index).ok_or("Item not found")?;
             price = item.price;
             item_name = item.name.clone();
-
             if balance < price { return Err(format!("Insufficient funds! Need ${:.2}", price)); }
-
             user_file.file.loadout.reel = item.clone();
         },
         ShopCategory::Lines => {
             let item = shop.lines.get(index).ok_or("Item not found")?;
             price = item.price;
             item_name = item.name.clone();
-
             if balance < price { return Err(format!("Insufficient funds! Need ${:.2}", price)); }
-
             user_file.file.loadout.line = item.clone();
         },
         ShopCategory::Sinkers => {
             let item = shop.sinkers.get(index).ok_or("Item not found")?;
             price = item.price;
             item_name = item.name.clone();
-
             if balance < price { return Err(format!("Insufficient funds! Need ${:.2}", price)); }
-
             user_file.file.loadout.sinker = item.clone();
         },
         ShopCategory::Bait => {
             let item = shop.state.daily_baits.get(index).ok_or("Item not found")?;
             price = item.price;
             item_name = item.name.clone();
-
             if balance < price { return Err(format!("Insufficient funds! Need ${:.2}", price)); }
-
             user_file.file.loadout.bait = Some(item.clone());
         },
     }
 
-    // Deduct Balance
     let new_balance = balance - price;
     user_file.file.balance = MonetaryAmount::new(new_balance);
-
-    // Save
     user_file.update();
 
-    Ok(format!("Successfully bought **{}** for ${:.2}!", item_name, price))
+    Ok(format!("Bought **{}** for ${:.2}!", item_name, price))
 }
 
 fn build_shop_embed(
@@ -244,13 +228,12 @@ fn build_shop_embed(
     selected_index: usize,
     user_id: serenity::all::UserId,
     #[cfg(feature = "guild_relative_userdata")]
-    guild_id: Option<&serenity::all::GuildId>
+    guild_id: Option<&serenity::all::GuildId>,
+    feedback: &Option<(bool, String)>,
 ) -> CreateEmbed {
-    // Load balance for display
     #[cfg(feature = "guild_relative_userdata")]
     let user_file = {
-        let guild_id = guild_id.expect("Bruh?? Guild ID should be present here but wasn't; shop.rs - build_shop_embed");
-
+        let guild_id = guild_id.expect("Guild ID should be present here");
         UserFile::read(&user_id, guild_id)
     };
     #[cfg(not(feature = "guild_relative_userdata"))]
@@ -258,15 +241,30 @@ fn build_shop_embed(
 
     let mut description = String::new();
 
-    // Helper to format item lines
-    let mut add_item_line = |index: usize, name: &str, price: f32, desc: &str| {
-        let cursor = if index == selected_index { "👉" } else { "⬛" };
-        let style = if index == selected_index { "**" } else { "" };
+    // 1. Transaction Feedback Banner
+    if let Some((success, msg)) = feedback {
+        let icon = if *success { "✅" } else { "❌" };
+        description.push_str(&format!("### {} {}\n\n", icon, msg));
+    }
 
-        description.push_str(&format!(
-            "{} {}{}{} - ${:.2}\n└ *{}*\n\n",
-            cursor, style, name, style, price, desc
-        ));
+    // 2. Balance Header
+    description.push_str(&format!("💳 **Balance:** {}\n\n", user_file.file.balance));
+
+    // 3. Item List Construction
+    let mut add_item_line = |index: usize, name: &str, price: f32, desc: &str| {
+        if index == selected_index {
+            // Selected Item: Highlighted, Bold, Expanded Description
+            description.push_str(&format!(
+                "🔷 **{}** — ${:.2}\n╰ *{}*\n",
+                name, price, desc
+            ));
+        } else {
+            // Unselected Item: Simple one-liner
+            description.push_str(&format!(
+                "▪️ {} — ${:.2}\n",
+                name, price
+            ));
+        }
     };
 
     match category {
@@ -295,7 +293,7 @@ fn build_shop_embed(
                 add_item_line(i, &item.name, item.price, &item.description);
             }
             if shop.state.daily_baits.is_empty() {
-                description = "Sold out for today!".to_string();
+                description.push_str("*Sold out for today! Check back tomorrow.*");
             }
         },
     }
@@ -303,8 +301,7 @@ fn build_shop_embed(
     CreateEmbed::new()
         .title(format!("🛒 Angler Shop - {}", category.name()))
         .description(description)
-        .color(0x00FF00)
-        .footer(CreateEmbedFooter::new(format!("Balance: {}", user_file.file.balance)))
+        .color(0x2B2D31) // Dark/Neutral background color
 }
 
 fn build_shop_components() -> Vec<CreateActionRow> {
@@ -314,16 +311,10 @@ fn build_shop_components() -> Vec<CreateActionRow> {
     let down = CreateButton::new("shop_down").label("▼ Down").style(ButtonStyle::Primary);
     let buy = CreateButton::new("shop_buy").label("🛒 Buy Selected").style(ButtonStyle::Success);
 
-    // Layout:
-    // [Left] [Up] [Right]
-    //       [Down]
-    //       [Buy]
-    // Ideally:
-    // Row 1: Left, Up, Right
-    // Row 2: Down, Buy
-
     vec![
-        CreateActionRow::Buttons(vec![left, up, right]),
-        CreateActionRow::Buttons(vec![down, buy]),
+        // Row 1: Left, Right, Up, Down
+        CreateActionRow::Buttons(vec![left, right, up, down]),
+        // Row 2: Buy
+        CreateActionRow::Buttons(vec![buy]),
     ]
 }
