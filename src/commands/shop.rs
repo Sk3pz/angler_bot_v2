@@ -118,10 +118,11 @@ command! {
         let message = data.command.get_response(&data.ctx.http).await.map_err(|e| e.to_string())?;
 
         let mut collector = message.await_component_interactions(&data.ctx.shard)
-            .timeout(Duration::from_secs(120)) // 120 Seconds Timeout
+            // .timeout(Duration::from_secs(120)) // REMOVED: Fixed timeout removed to allow resetting
             .stream();
 
-        while let Some(interaction) = collector.next().await {
+        // MODIFIED: Use tokio::time::timeout on the stream.next() call to reset timer on every interaction
+        while let Ok(Some(interaction)) = tokio::time::timeout(Duration::from_secs(120), collector.next()).await {
             let custom_id = match &interaction.data.kind {
                 ComponentInteractionDataKind::Button => interaction.data.custom_id.clone(),
                 _ => continue,
@@ -141,14 +142,21 @@ command! {
                     item_index = 0;
                 },
                 "shop_up" => {
+                    // MODIFIED: Loop to bottom
                     if item_index > 0 {
                         item_index -= 1;
+                    } else {
+                        let max_items = get_item_count(&shop, category);
+                        item_index = max_items.saturating_sub(1);
                     }
                 },
                 "shop_down" => {
                     let max_items = get_item_count(&shop, category);
+                    // MODIFIED: Loop to top
                     if item_index < max_items.saturating_sub(1) {
                         item_index += 1;
+                    } else {
+                        item_index = 0;
                     }
                 },
                 "shop_buy" => {

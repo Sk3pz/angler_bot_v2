@@ -39,9 +39,9 @@ impl FishCategory {
             FishCategory::Apex => 2.5,                              // Boss fight!
             FishCategory::Predatory | FishCategory::Abyssal => 1.5, // Tough fight
             FishCategory::BottomFeeder => 1.2,                      // Moderate fight
-            FishCategory::Schooling => 0.8,                         // Weak individually
-            FishCategory::BaitFish => 0.1,                          // No fight
-            FishCategory::Ornamental => 0.2,                        // Gentle
+            FishCategory::Schooling => 1.8,                         // Weak individually
+            FishCategory::BaitFish => 0.8,                          // No fight
+            FishCategory::Ornamental => 1.2,                        // Gentle
             _ => 1.0,                                               // Standard
         }
     }

@@ -27,7 +27,7 @@ const MYSTERIOUS_MESSAGES: &[&str] = &[
     "Something just brushed against your line!",
     "Do you feel like somethings staring back too?",
     "Your reflection in the water doesn't look like you...",
-    "A cold chill runs down your spine.",
+    "Did you just have a cold chill run down your spine? Or was that just the breeze?",
     "Was that the wind or did someone just whisper something?",
     "Is it just me or is the fog getting thicker?",
     "My fish finder just screamed and died. Weird.",
@@ -127,12 +127,17 @@ const MISSED_FISH_LINES: &[&str] = &[
     "A swing and a miss!",
 ];
 
-fn missed_fish(fish: &Fish, userfile: &UserFile) -> (String, String, bool) {
+fn missed_fish(fish: &Fish, userfile: &UserFile) -> Vec<(String, String, bool)> {
     let lost = if userfile.file.loadout.has_underwater_camera {
-        ("📹 Underwater Camera".to_string(), format!("\nYou lost a {:.2}' {} weighing {:.2} lbs.", fish.size, fish.fish_type.name, fish.weight), false)
+        vec![
+            ("📹 Underwater Camera".to_string(), format!("You lost a {:.2}' {} weighing {:.2} lbs.", fish.size, fish.fish_type.name, fish.weight), false),
+            ("🧙 Strange Angler Darryl".to_string(), format!("That would've been {}!", fish.value), false)
+        ]
     } else {
         let lost_message = MISSED_FISH_LINES[rand::rng().random_range(0..MISSED_FISH_LINES.len())];
-        ("🧙 Strange Angler Darryl".to_string(), format!("{}", lost_message), false)
+        vec![
+            ("🧙 Strange Angler Darryl".to_string(), format!("{}", lost_message), false)
+        ]
     };
 
     lost
@@ -291,7 +296,7 @@ command! {
             ("🌊 Cast Depth", format!("{}", depth_display), false),
             ("🧙 Strange Angler Darryl", format!("*{}*", random_mysterious_message), false), // TODO: strange angler's name is darryl
         ])
-        .thumbnail("attachment://FishingRod.png")
+        .thumbnail("attachment://darryl.png")
         .color(0x3498db)
         .footer(CreateEmbedFooter::new(format!("{}", random_tip())));
 
@@ -307,7 +312,7 @@ command! {
                 .embed(embed)
                 .components(vec![buttons]);
 
-        let attachment = CreateAttachment::path("./assets/FishingRod.png").await;
+        let attachment = CreateAttachment::path("./assets/darryl.png").await;
 
         // use the attachment if found
         if let Ok(file) = attachment {
@@ -451,7 +456,7 @@ pub async fn catch(catch: CastHandler) {
         let embed = CreateEmbed::new()
             .title("💨 The fish got away!")
             .description("The fish slipped off the hook.".to_string())
-            .fields(vec![lost])
+            .fields(lost)
             .thumbnail("attachment://FishingRod.png")
             .color(0x3498db)
             .footer(CreateEmbedFooter::new(format!("{}", random_tip())));
@@ -567,7 +572,7 @@ pub async fn catch(catch: CastHandler) {
                     .description(format!("You typed the wrong code (`{}`).",
                                          user_input))
 
-                    .fields(vec![lost])
+                    .fields(lost)
                     .color(Color::RED);
 
                 let message = CreateMessage::new()
@@ -591,7 +596,7 @@ pub async fn catch(catch: CastHandler) {
             let embed = CreateEmbed::new()
                 .title("💥 SNAP!")
                 .description("You weren't fast enough and your line snapped!".to_string())
-                .fields(vec![lost])
+                .fields(lost)
                 .color(Color::RED);
 
             let message = CreateMessage::new()

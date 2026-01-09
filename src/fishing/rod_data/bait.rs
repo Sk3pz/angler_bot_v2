@@ -294,6 +294,11 @@ impl Bait {
                         BaitAttraction::Category(cat, bias, quality)
                     },
                     _ => {
+                        // hardcoded mythical chance at 1%:
+                        let chance = rng.random_range(0..100);
+                        if chance < 1 {
+                            return BaitAttraction::Rarity(FishRarity::Mythical, bias, quality);
+                        }
                         let rarities = [
                             FishRarity::Rare, FishRarity::Elusive, FishRarity::Legendary
                         ];

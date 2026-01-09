@@ -20,7 +20,7 @@ max_cast_time_variation = 5.0
 # The base amount of time for quick time events in seconds
 base_qte_time = 15.0
 # minimum amount of time for quick time events in seconds
-min_qte_time = 5.0
+min_qte_time = 2.0
 # fish_value_calculation - Determines how the value of fish is calculated for the bot. Options include:
 #  - Averaged: Uses a "Fair Market" Approach, averaging the size and weight variations of the fish to affect value
 #     (More stable, less extreme highs and lows)

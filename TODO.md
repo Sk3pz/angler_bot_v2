@@ -24,7 +24,8 @@
   - [x] Different baits for different fish  
 - [ ] Fishing events  
   - [ ] Junk / Trash - no value, just a nuisance (no longer treat them as a fish like v1)  
-      - [ ] Lore stories & descriptions
+  - [ ] Game Warden takes your fish & a small % of money  
+  - [ ] Turtle steals your catch and runs away with it
   - [ ] Treasure - random amount of money or a random item (e.g., bait, rod upgrade - do you want to use it? prompt, etc.)  
   - [x] ~~Legendary Fish - rare fish with unique names and descriptions that can be caught (i.e. Loch Ness Monster, Giant Squid, etc.)~~  
           (Moved to Mythical rarity, but are treated as normal fish)  

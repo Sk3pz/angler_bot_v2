@@ -19,7 +19,7 @@
         description: "A simple, cured bamboo cane. Lightweight and reliable for small creek fishing.",
     ),
     (
-        name: "Fiberglass Spinner",
+        name: "Fiberglass Rod",
         // Logic: +10% over base.
         sensitivity: 0.1,
         strength_bonus: 1.2,

@@ -11,14 +11,14 @@
         description: "Tiny lead balls pinched onto the line for subtle depth control.",
         price: 50.0,
         weight: 0.3,
-        depth_range: (min: 5.0, max: 30.0, average: 15.0),
+        depth_range: (min: 5.0, max: 60.0, average: 20.0),
     ),
     (
         name: "Bullet Weight",
         description: "Cone-shaped to slide through weeds without snagging.",
         price: 250.0,
         weight: 1.0,
-        depth_range: (min: 15.0, max: 60.0, average: 35.0),
+        depth_range: (min: 15.0, max: 70.0, average: 35.0),
     ),
     (
         name: "Pyramid Sinker",

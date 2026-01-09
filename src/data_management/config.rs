@@ -83,7 +83,7 @@ impl Default for Config {
                 min_cast_wait: 3.0,
                 max_cast_time_variation: 5.0,
                 base_qte_time: 15.0,
-                min_qte_time: 5.0,
+                min_qte_time: 2.0,
                 fish_value_calculation: ValueCalculationType::Multiplicative,
             },
             bait: BaitConfig {

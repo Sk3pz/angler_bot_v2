@@ -97,7 +97,7 @@ impl RodLoadout {
         let min = self.sinker.depth_range.min;
         let max = self.sinker.depth_range.max;
         let average = self.sinker.depth_range.average;
-        format!("{}m - {}m (Average: {}m)", min, max, average)
+        format!("{:.2}ft - {:.2}ft (Average: {:.2}ft)", min, max, average)
     }
 
     pub fn get_total_strength_display(&self) -> String {
@@ -106,7 +106,7 @@ impl RodLoadout {
         //     "{}lbs (Line Strength: {}, Rod Bonus: {:.2}, Sinker Weight: {:.2})",
         //     total_strength, self.line.strength, self.rod.strength_bonus, self.sinker.weight
         // )
-        format!("{}lbs", total_strength)
+        format!("{:.2}lbs", total_strength)
     }
 
     pub fn get_speed_multiplier_display(&self) -> String {

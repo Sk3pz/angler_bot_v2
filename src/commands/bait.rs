@@ -63,11 +63,10 @@ command! {
 
         data.command.create_response(&data.ctx.http, CreateInteractionResponse::Message(response)).await.map_err(|e| e.to_string())?;
 
-        // FIX: Use `mut message` to allow direct editing later (solves the timeout closing issue)
         let mut message = data.command.get_response(&data.ctx.http).await.map_err(|e| e.to_string())?;
 
         let mut collector = message.await_component_interactions(&data.ctx.shard)
-            .timeout(Duration::from_secs(120))
+            .timeout(Duration::from_secs(120)) // handled manually in the loop
             .stream();
 
         while let Some(interaction) = collector.next().await {
@@ -93,6 +92,8 @@ command! {
                     if index < max_index { index += 1; }
                 },
                 "bait_equip" => {
+                    // TODO: If the user is casting and had a bait bucket open, they can exploit
+
                     if index == 0 {
                         // === UNEQUIP LOGIC (No Bait) ===
                         if let Some(old_bait) = user_file.file.loadout.bait.take() {
