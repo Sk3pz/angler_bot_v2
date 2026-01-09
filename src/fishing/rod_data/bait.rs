@@ -50,7 +50,6 @@ pub enum BaitAttraction {
     Heavy {
         bias: BaitBias,
     },
-    AvgWeight, // No bias needed, it resets to center
     Light {
         bias: BaitBias,
     },
@@ -58,7 +57,6 @@ pub enum BaitAttraction {
     Large {
         bias: BaitBias,
     },
-    AvgSize, // No bias needed, it resets to center
     Small {
         bias: BaitBias,
     },
@@ -127,8 +125,6 @@ impl Bait {
                 BaitAttraction::Heavy { bias } => total_bias += bias.get_normalized_strength(),
                 // Subtract the normalized strength
                 BaitAttraction::Light { bias } => total_bias -= bias.get_normalized_strength(),
-                // Hard reset to 0 if AvgWeight is present
-                BaitAttraction::AvgWeight => return 0.0,
                 _ => {}
             }
         }
@@ -144,7 +140,6 @@ impl Bait {
             match attr {
                 BaitAttraction::Large { bias } => total_bias += bias.get_normalized_strength(),
                 BaitAttraction::Small { bias } => total_bias -= bias.get_normalized_strength(),
-                BaitAttraction::AvgSize => return 0.0,
                 _ => {}
             }
         }
