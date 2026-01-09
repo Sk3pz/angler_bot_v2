@@ -1,6 +1,7 @@
 [
     (
         name: "Willow Branch",
+        description: "A flexible stick found on the ground. Better than using your bare hands, but not by much.",
         price: 0.0,
         sensitivity: 0.8,
         strength_bonus: 0.8,
@@ -8,6 +9,7 @@
     ),
     (
         name: "Bamboo Pole",
+        description: "A simple, cured bamboo cane. Lightweight and reliable for small creek fishing.",
         price: 150.0,
         sensitivity: 1.0,
         strength_bonus: 1.0,
@@ -15,6 +17,7 @@
     ),
     (
         name: "Fiberglass Spinner",
+        description: "Durable and forgiving. The standard entry-level rod for lake fishing.",
         price: 500.0,
         sensitivity: 1.15,
         strength_bonus: 1.2,
@@ -22,6 +25,7 @@
     ),
     (
         name: "Graphite Baitcaster",
+        description: "Stiff and sensitive. Detects subtle bites that fiberglass rods miss.",
         price: 1200.0,
         sensitivity: 1.25,
         strength_bonus: 1.4,
@@ -29,6 +33,7 @@
     ),
     (
         name: "Carbon Surf Caster",
+        description: "A long rod designed to hurl heavy bait past the breaking waves.",
         price: 3500.0,
         sensitivity: 1.3,
         strength_bonus: 1.6,
@@ -36,6 +41,7 @@
     ),
     (
         name: "Offshore Troller",
+        description: "Thick, short, and powerful. Built to be mounted on a boat for big game.",
         price: 8000.0,
         sensitivity: 1.4,
         strength_bonus: 2.2,
@@ -43,6 +49,7 @@
     ),
     (
         name: "Bent-Butt Deep Drop",
+        description: "Angled handle keeps the rod level under extreme load. Essential for deep sea drops.",
         price: 25000.0,
         sensitivity: 1.6,
         strength_bonus: 3.5,
@@ -50,6 +57,7 @@
     ),
     (
         name: "Titanium Class Unlimited",
+        description: "Custom-machined from aerospace alloys. Theoretically unbreakable.",
         price: 100000.0,
         sensitivity: 2.0,
         strength_bonus: 5.0,

@@ -128,23 +128,27 @@ impl Default for RodLoadout {
         Self {
             rod: RodBase {
                 name: "Willow Branch".to_string(),
+                description: "A flexible stick found on the ground. Better than using your bare hands, but not by much.".to_string(),
                 price: 0.0,
                 sensitivity: 0.8,
                 strength_bonus: 0.8,
                 efficiency_multiplier: 0.8,
             },
             line: Line {
-                name: "Old String".to_string(),
+                name: "Old Thread".to_string(),
+                description: "Cotton thread borrowed from a sewing kit. Snaps if a fish looks at it wrong.".to_string(),
                 price: 0.0,
                 strength: 5,
             },
             reel: Reel {
-                name: "Tin Can".to_string(),
+                name: "Rusty Can".to_string(),
+                description: "Line wrapped around a rusty tin can. It takes ages to pull anything in.".to_string(),
                 price: 0.0,
                 speed_multiplier: 0.7,
             },
             sinker: Sinker {
                 name: "River Stone".to_string(),
+                description: "A smooth rock tied on with a clumsy knot. Keeps bait just under the surface.".to_string(),
                 price: 0.0,
                 weight: 0.1,
                 depth_range: Attribute {

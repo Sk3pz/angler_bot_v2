@@ -1,58 +1,58 @@
 [
     (
         name: "River Stone",
+        description: "A smooth rock tied on with a clumsy knot. Keeps bait just under the surface.",
         price: 0.0,
         weight: 0.1,
-        // Shallowest. Good for Minnows/Goldfish.
         depth_range: (min: 0.0, max: 15.0, average: 5.0),
     ),
     (
         name: "Split Shot",
+        description: "Tiny lead balls pinched onto the line for subtle depth control.",
         price: 50.0,
         weight: 0.3,
-        // Finesse. Good for Bluegill/Crappie.
         depth_range: (min: 5.0, max: 30.0, average: 15.0),
     ),
     (
         name: "Bullet Weight",
+        description: "Cone-shaped to slide through weeds without snagging.",
         price: 250.0,
         weight: 1.0,
-        // Standard. Good for Bass/Trout.
         depth_range: (min: 15.0, max: 60.0, average: 35.0),
     ),
     (
         name: "Pyramid Sinker",
+        description: "Pointed shape digs into the sand to hold bottom in strong currents.",
         price: 800.0,
         weight: 4.0,
-        // Bottom. Good for Catfish/Flounder.
         depth_range: (min: 30.0, max: 120.0, average: 75.0),
     ),
     (
         name: "Bank Sinker",
+        description: "Teardrop shape designed to drop straight down quickly.",
         price: 3000.0,
         weight: 12.0,
-        // Offshore. Good for Snapper/Grouper.
         depth_range: (min: 100.0, max: 400.0, average: 250.0),
     ),
     (
         name: "Downrigger Ball",
+        description: "Heavy lead sphere with a fin to track straight at trolling speeds.",
         price: 10000.0,
         weight: 30.0,
-        // Deep Trolling. Good for Swordfish/Tuna.
         depth_range: (min: 300.0, max: 1000.0, average: 600.0),
     ),
     (
         name: "Deep Drop Stick",
+        description: "Long cylinder that cuts through water resistance during 10-minute drops.",
         price: 25000.0,
         weight: 80.0,
-        // Abyssal. Good for Anglerfish.
         depth_range: (min: 800.0, max: 2500.0, average: 1600.0),
     ),
     (
         name: "Sounding Lead",
+        description: "Massive weight with a tallow recess to sample the ocean floor composition.",
         price: 75000.0,
         weight: 200.0,
-        // The Bottom. Good for the Kraken and Nessie (Loch Ness Monster).
         depth_range: (min: 2500.0, max: 6000.0, average: 4000.0),
     ),
 ]

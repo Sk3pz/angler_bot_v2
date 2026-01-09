@@ -1,46 +1,55 @@
 [
     (
-        name: "Old String",
+        name: "Old Thread",
+        description: "Cotton thread borrowed from a sewing kit. Snaps if a fish looks at it wrong.",
         price: 0.0,
         strength: 5,
     ),
     (
         name: "Monofilament",
+        description: "Stretchy clear plastic line. Good for absorbing shock from small fish.",
         price: 50.0,
         strength: 10,
     ),
     (
         name: "Monofilament",
+        description: "Thicker mono. Can handle a decent fight but has high memory coil.",
         price: 200.0,
         strength: 25,
     ),
     (
         name: "Braided PE",
+        description: "Zero stretch and thin diameter. Cuts through the water easily.",
         price: 600.0,
         strength: 60,
     ),
     (
         name: "Fluorocarbon",
+        description: "Nearly invisible underwater. Essential for tricking wary predators.",
         price: 1500.0,
         strength: 150,
     ),
     (
         name: "Stainless Steel Wire",
+        description: "Prevents toothy fish like sharks from biting through the line.",
         price: 4000.0,
         strength: 500,
     ),
     (
         name: "Aramid Braid",
+        description: "Bulletproof vest material woven into a fishing line.",
         price: 12000.0,
         strength: 2000,
     ),
     (
         name: "Hollow Core Braid",
+        description: "Complex weave allowing for splice connections. Immense breaking strain.",
         price: 45000.0,
         strength: 10000,
     ),
     (
         name: "Polymer Cable",
+        description: "Synthetic cable used for towing ships and mooring oil rigs.",
         price: 150000.0,
         strength: 25000,
     ),
