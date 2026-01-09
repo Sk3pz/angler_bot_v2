@@ -372,17 +372,27 @@ impl Bait {
     }
 
     fn generate_description(attractions: &[BaitAttraction], is_lure: bool) -> String {
-        let attr_desc: Vec<String> = attractions.iter().map(|a| match a {
-            BaitAttraction::Heavy { .. } => "heavier fish".to_string(),
-            BaitAttraction::Light { .. } => "lighter fish".to_string(),
-            BaitAttraction::Large { .. } => "larger fish".to_string(),
-            BaitAttraction::Small { .. } => "smaller fish".to_string(),
-            BaitAttraction::Category(c, _, _) => format!("{:?} fish", c),
-            BaitAttraction::Rarity(r, _, _) => format!("{} fish", r),
-            BaitAttraction::SpecificFish { name, .. } => format!("{}", name),
+        let attr_desc: Vec<String> = attractions.iter().map(|a| {
+            let (bias, text) = match a {
+                BaitAttraction::Heavy { bias, .. } => (bias, "heavier fish".to_string()),
+                BaitAttraction::Light { bias, .. } => (bias, "lighter fish".to_string()),
+                BaitAttraction::Large { bias, .. } => (bias, "larger fish".to_string()),
+                BaitAttraction::Small { bias, .. } => (bias, "smaller fish".to_string()),
+                BaitAttraction::Category(c, bias, _) => (bias, format!("{:?} fish", c)),
+                BaitAttraction::Rarity(r, bias, _) => (bias, format!("{} fish", r)),
+                BaitAttraction::SpecificFish { name, bias, .. } => (bias, format!("{}", name)),
+            };
+
+            let verb = match bias {
+                BaitBias::Low => "lightly attracts",
+                BaitBias::Medium => "attracts",
+                BaitBias::High => "greatly attracts",
+            };
+
+            format!("{} {}", verb, text)
         }).collect();
 
         let type_str = if is_lure { "A reusable lure" } else { "A bait" };
-        format!("{} that attracts {}.", type_str, attr_desc.join(", "))
+        format!("{} that {}.", type_str, attr_desc.join(", "))
     }
 }
