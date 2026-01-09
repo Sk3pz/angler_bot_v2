@@ -334,15 +334,7 @@ pub async fn catch(catch: CastHandler) {
     ).await;
 
     #[cfg(feature = "guild_relative_userdata")]
-    let mut userfile = {
-        let Some(guild_id) = data.guild_id else {
-            command_response_ephemeral(&data.ctx, &data.command,
-                                       "You must be in a guild to execute that command!");
-            return Ok(());
-        };
-
-        crate::data_management::userfile::UserFile::read(&catch.user, catch.interaction.guild_id.unwrap())
-    };
+    let mut userfile = crate::data_management::userfile::UserFile::read(&catch.user, &catch.interaction.guild_id.unwrap());
     #[cfg(not(feature = "guild_relative_userdata"))]
     let mut userfile = crate::data_management::userfile::UserFile::read(&catch.user);
 

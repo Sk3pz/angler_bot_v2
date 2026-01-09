@@ -15,12 +15,14 @@ mod admin;
 mod cast;
 mod game_tips;
 mod info;
+mod shop;
 
 pub fn get_all_cmds() -> Vec<Box<dyn BotCommand>> {
     vec![
         // regular commands:
         Box::new(cast::CastCommand),
         Box::new(info::InfoCommand),
+        Box::new(shop::ShopCommand),
         // admin commands
         Box::new(admin::register_channel::RegisterChannelCommand),
     ]

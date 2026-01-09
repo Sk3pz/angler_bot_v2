@@ -1,4 +1,6 @@
 use serenity::all::{Color, CreateAttachment, CreateEmbed, CreateInteractionResponse, CreateInteractionResponseMessage};
+#[cfg(feature = "guild_relative_userdata")]
+use crate::commands::command_response_ephemeral;
 use crate::{command, nay};
 use crate::data_management::userfile::UserFile;
 
