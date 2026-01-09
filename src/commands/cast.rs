@@ -127,12 +127,12 @@ const MISSED_FISH_LINES: &[&str] = &[
     "A swing and a miss!",
 ];
 
-fn missed_fish(fish: &Fish, userfile: &UserFile) -> String {
+fn missed_fish(fish: &Fish, userfile: &UserFile) -> (String, String, bool) {
     let lost = if userfile.file.loadout.has_underwater_camera {
-        format!("\nYou lost a {:.2}' {} weighing {:.2} lbs.", fish.size, fish.fish_type.name, fish.weight)
+        ("📹 Underwater Camera".to_string(), format!("\nYou lost a {:.2}' {} weighing {:.2} lbs.", fish.size, fish.fish_type.name, fish.weight), false)
     } else {
         let lost_message = MISSED_FISH_LINES[rand::rng().random_range(0..MISSED_FISH_LINES.len())];
-        format!("**🧙 Strange Angler**\n{}", lost_message)
+        ("🧙 Strange Angler Darryl".to_string(), format!("{}", lost_message), false)
     };
 
     lost
@@ -285,11 +285,11 @@ command! {
 
         let embed = CreateEmbed::new()
         .title(format!("🎣 You cast your {} into the pond!", loadout.rod.name))
-        //.description(format!("\n**Strange Angler:** *{}*\n\nCast to {}. Waiting for a bite...", random_mysterious_message, depth_display))
+        //.description(format!("\n**Strange Angler Darryl:** *{}*\n\nCast to {}. Waiting for a bite...", random_mysterious_message, depth_display))
         .description("Waiting for a bite...".to_string())
         .fields(vec![
             ("🌊 Cast Depth", format!("{}", depth_display), false),
-            ("🧙 Strange Angler", format!("*{}*", random_mysterious_message), false), // TODO: strange angler's name is darryl
+            ("🧙 Strange Angler Darryl", format!("*{}*", random_mysterious_message), false), // TODO: strange angler's name is darryl
         ])
         .thumbnail("attachment://FishingRod.png")
         .color(0x3498db)
@@ -450,8 +450,8 @@ pub async fn catch(catch: CastHandler) {
 
         let embed = CreateEmbed::new()
             .title("💨 The fish got away!")
-            .description(format!("The fish slipped off the hook.\n{}",
-                                 lost))
+            .description("The fish slipped off the hook.".to_string())
+            .fields(vec![lost])
             .thumbnail("attachment://FishingRod.png")
             .color(0x3498db)
             .footer(CreateEmbedFooter::new(format!("{}", random_tip())));
@@ -552,7 +552,7 @@ pub async fn catch(catch: CastHandler) {
                     nay!("Failed to send cast response message: {}", e);
                 }
 
-                // dont return, proceed to successful catch handling
+                // don't return, proceed to successful catch handling
             } else {
                 // FAILURE
 
@@ -564,8 +564,10 @@ pub async fn catch(catch: CastHandler) {
 
                 let embed = CreateEmbed::new()
                     .title("💥 SNAP!")
-                    .description(format!("You typed the wrong code (`{}`).\n{}",
-                                         user_input, lost))
+                    .description(format!("You typed the wrong code (`{}`).",
+                                         user_input))
+
+                    .fields(vec![lost])
                     .color(Color::RED);
 
                 let message = CreateMessage::new()
@@ -588,8 +590,8 @@ pub async fn catch(catch: CastHandler) {
 
             let embed = CreateEmbed::new()
                 .title("💥 SNAP!")
-                .description(format!("You weren't fast enough and your line snapped!\n{}",
-                                     lost))
+                .description("You weren't fast enough and your line snapped!".to_string())
+                .fields(vec![lost])
                 .color(Color::RED);
 
             let message = CreateMessage::new()
