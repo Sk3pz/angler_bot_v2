@@ -1,7 +1,7 @@
 [
     (
         name: "Old Thread",
-        description: "Cotton thread borrowed from a sewing kit. Snaps if a fish looks at it wrong.",
+        description: "(Default Item) Cotton thread borrowed from a sewing kit. Snaps if a fish looks at it wrong.",
         price: 0.0,
         strength: 5,
     ),

@@ -80,7 +80,7 @@ impl RodLoadout {
         let config = Config::load();
         let base = config.fishing.base_catch_chance;
 
-        let final_chance = base * multiplier;
+        let final_chance = base + multiplier;
 
         // scale to percentage
         let percentage = (final_chance * 100.0).round() as u32;
@@ -132,7 +132,7 @@ impl Default for RodLoadout {
                 name: "Willow Branch".to_string(),
                 description: "A flexible stick found on the ground. Better than using your bare hands, but not by much.".to_string(),
                 price: 0.0,
-                sensitivity: 0.8,
+                sensitivity: -0.1,
                 strength_bonus: 0.8,
                 efficiency_multiplier: 0.8,
             },

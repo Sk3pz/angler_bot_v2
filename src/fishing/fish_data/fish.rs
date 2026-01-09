@@ -170,7 +170,7 @@ impl Fish {
         // rods sensitivity
         let rod_mod = loadout.rod.sensitivity;
 
-        let catch_chance = base_chance * rod_mod;
+        let catch_chance = (base_chance + rod_mod).min(1.0);
 
         // fight multiplier
         let fight_mod = self.category.fight_multiplier();

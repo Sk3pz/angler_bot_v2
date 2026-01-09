@@ -138,44 +138,96 @@ impl BaitData {
 
 impl Bait {
     /// Generates a random bait or lure based on the provided potency.
-    pub fn generate(potency: BaitPotency) -> Self {
+    pub fn generate(potency: BaitPotency, force_lure: bool) -> Self {
         let mut rng = rand::rng();
 
         // 10% chance to be a Lure (Infinite use, higher cost)
         // Lures are more common in higher potencies
-        let is_lure = match potency {
-            BaitPotency::Low => rng.random_bool(0.05),
-            BaitPotency::Medium => rng.random_bool(0.15),
-            BaitPotency::High => rng.random_bool(0.25),
+        let is_lure = if force_lure {
+            true
+        } else {
+            match potency {
+                BaitPotency::Low => rng.random_bool(0.05),
+                BaitPotency::Medium => rng.random_bool(0.15),
+                BaitPotency::High => rng.random_bool(0.25),
+            }
         };
 
         let mut attractions = Vec::new();
+
+        // Helper closure to add attractions while avoiding logic conflicts (e.g., Heavy + Light)
+        let mut add_attraction = |target_bias: BaitBias| {
+            let mut local_rng = rand::rng();
+            let mut attempts = 0;
+            // Try up to 5 times to generate a non-conflicting attraction
+            while attempts < 5 {
+                let candidate = Self::generate_random_attraction(&mut local_rng, target_bias.clone());
+
+                let is_conflicting = attractions.iter().any(|existing| {
+                    match (existing, &candidate) {
+                        // Mutually exclusive physical traits
+                        (BaitAttraction::Heavy{..}, BaitAttraction::Light{..}) => true,
+                        (BaitAttraction::Light{..}, BaitAttraction::Heavy{..}) => true,
+                        (BaitAttraction::Large{..}, BaitAttraction::Small{..}) => true,
+                        (BaitAttraction::Small{..}, BaitAttraction::Large{..}) => true,
+
+                        // Prevent duplicate Categories (e.g. "Predatory Predatory Bait")
+                        (BaitAttraction::Category(c1, _), BaitAttraction::Category(c2, _)) if c1 == c2 => true,
+
+                        // Prevent duplicate Rarities
+                        (BaitAttraction::Rarity(r1, _), BaitAttraction::Rarity(r2, _)) if r1 == r2 => true,
+
+                        _ => false
+                    }
+                });
+
+                if !is_conflicting {
+                    attractions.push(candidate);
+                    break;
+                }
+                attempts += 1;
+            }
+        };
 
         // Define generation rules
         match potency {
             BaitPotency::Low => {
                 let count = rng.random_range(1..=2);
                 for _ in 0..count {
-                    attractions.push(Self::generate_random_attraction(&mut rng, BaitBias::Low));
+                    add_attraction(BaitBias::Low);
+                    //attractions.push(Self::generate_random_attraction(&mut rng, BaitBias::Low));
                 }
             },
             BaitPotency::Medium => {
-                attractions.push(Self::generate_random_attraction(&mut rng, BaitBias::Medium));
-                if rng.random_bool(0.5) {
-                    attractions.push(Self::generate_random_attraction(&mut rng, BaitBias::Low));
+                add_attraction(BaitBias::Medium);
+                //attractions.push(Self::generate_random_attraction(&mut rng, BaitBias::Medium));
+                let count = rng.random_range(1..=2);
+                for _ in 0..count {
+                    add_attraction(BaitBias::Low);
+                    //attractions.push(Self::generate_random_attraction(&mut rng, BaitBias::Low));
                 }
             },
             BaitPotency::High => {
                 let high_count = rng.random_range(1..=2);
                 for _ in 0..high_count {
-                    attractions.push(Self::generate_random_attraction(&mut rng, BaitBias::High));
+                    add_attraction(BaitBias::High);
                 }
-                attractions.push(Self::generate_random_attraction(&mut rng, BaitBias::Medium));
+                add_attraction(BaitBias::Medium);
 
                 let low_count = rng.random_range(1..=2);
                 for _ in 0..low_count {
-                    attractions.push(Self::generate_random_attraction(&mut rng, BaitBias::Low));
+                    add_attraction(BaitBias::Low);
                 }
+                // let high_count = rng.random_range(1..=2);
+                // for _ in 0..high_count {
+                //     attractions.push(Self::generate_random_attraction(&mut rng, BaitBias::High));
+                // }
+                // attractions.push(Self::generate_random_attraction(&mut rng, BaitBias::Medium));
+                //
+                // let low_count = rng.random_range(1..=2);
+                // for _ in 0..low_count {
+                //     attractions.push(Self::generate_random_attraction(&mut rng, BaitBias::Low));
+                // }
             },
         }
 

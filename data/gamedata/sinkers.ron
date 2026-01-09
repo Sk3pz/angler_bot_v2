@@ -1,7 +1,7 @@
 [
     (
         name: "River Stone",
-        description: "A smooth rock tied on with a clumsy knot. Keeps bait just under the surface.",
+        description: "(Default Item) A smooth rock tied on with a clumsy knot. Keeps bait just under the surface.",
         price: 0.0,
         weight: 0.1,
         depth_range: (min: 0.0, max: 15.0, average: 5.0),

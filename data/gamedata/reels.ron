@@ -1,7 +1,7 @@
 [
     (
         name: "Rusty Can",
-        description: "Line wrapped around a rusty tin can. It takes ages to pull anything in.",
+        description: "(Default Item) Line wrapped around a rusty tin can. It takes ages to pull anything in.",
         price: 0.0,
         speed_multiplier: 0.7,
     ),

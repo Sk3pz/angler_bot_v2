@@ -75,17 +75,21 @@ impl Shop {
 
         // Generate Daily Stock:
         // 4 Low Potency (Common/Cheap)
-        baits.push(Bait::generate(BaitPotency::Low));
-        baits.push(Bait::generate(BaitPotency::Low));
-        baits.push(Bait::generate(BaitPotency::Low));
-        baits.push(Bait::generate(BaitPotency::Low));
+        baits.push(Bait::generate(BaitPotency::Low, false));
+        baits.push(Bait::generate(BaitPotency::Low, false));
+        baits.push(Bait::generate(BaitPotency::Low, false));
+        baits.push(Bait::generate(BaitPotency::Low, false));
 
         // 2 Medium Potency (Decent)
-        baits.push(Bait::generate(BaitPotency::Medium));
-        baits.push(Bait::generate(BaitPotency::Medium));
+        baits.push(Bait::generate(BaitPotency::Medium, false));
+        baits.push(Bait::generate(BaitPotency::Medium, false));
+        baits.push(Bait::generate(BaitPotency::Medium, false));
 
         // 1 High Potency (Rare/Expensive)
-        baits.push(Bait::generate(BaitPotency::High));
+        baits.push(Bait::generate(BaitPotency::High, false));
+
+        // forced lure
+        baits.push(Bait::generate(BaitPotency::High, true));
 
         let state = ShopState {
             last_refresh: date,
