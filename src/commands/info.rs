@@ -3,6 +3,7 @@ use serenity::all::{Color, CreateAttachment, CreateEmbed, CreateInteractionRespo
 use crate::commands::command_response_ephemeral;
 use crate::{command, nay};
 use crate::data_management::userfile::UserFile;
+use crate::fishing::fish_data::fish::Pond;
 
 command! {
     struct: InfoCommand,
@@ -18,7 +19,6 @@ command! {
                     "You must be in a guild to execute that command!").await;
                 return Ok(());
             };
-
             UserFile::read(&data.sender.id, guild_id)
         };
         #[cfg(not(feature = "guild_relative_userdata"))]
@@ -26,62 +26,73 @@ command! {
 
         let loadout = &userfile.file.loadout;
 
-        let strength_stat = loadout.get_total_strength_display();
-        let speed_stat = loadout.get_speed_multiplier_display();
-        let chance_stat = loadout.get_catch_chance_display();
-        let depth_stat = loadout.get_depth_range_display();
-
-        // Format special components
+        // --- Gear Formatting ---
         let bait_display = match &loadout.bait {
-            Some(bait) => format!("**{}** (Use Chance: {:.0}%)", bait.name, bait.use_chance * 100.0),
+            Some(bait) => format!("**{}**\n╰ *{}*", bait.name, bait.description),
             None => "None".to_string(),
         };
 
-        let depth_finder_display = if loadout.has_depth_finder {
-            "✅ Equipped"
+        // --- Tech/Unique Items Check ---
+        let mut tech_list = Vec::new();
+        if loadout.has_depth_finder { tech_list.push("✅ Depth Finder"); }
+        if loadout.has_underwater_camera { tech_list.push("✅ Underwater Camera"); }
+
+        let tech_display = if tech_list.is_empty() {
+            "No special equipment equipped.".to_string()
         } else {
-            "❌ Not Equipped"
+            tech_list.join("\n")
         };
 
-        // Build the Embed
+        let fish_count = if let Ok(pond) = Pond::load() {
+            format!("{}", pond.fish_types.len())
+        } else {
+            nay!("Failed to load pond data, cannot determine fish count.");
+            "???".to_string()
+        };
+
+        // --- Build Embed ---
         let embed = CreateEmbed::new()
-            .title(format!("🎣 Angler Info: {}", data.sender.display_name()))
-            .description("Here are your current statistics and equipment loadout.")
-            .color(Color::BLUE)
+            .title(format!("🎣 Angler Profile: {}", data.sender.display_name()))
+            .color(0x00A2FF) // Nice Ocean Blue
             .thumbnail("attachment://rod_with_fish.png")
-            // -- General Stats --
-            .field("💰 Balance", format!("{}", userfile.file.balance), true)
-            .field("🐟 Total Catches", format!("{}", userfile.file.total_catches), true)
-            .field("", "", false) // Spacer
-            // -- Equipment Breakdown --
-            .field("🎒 Equipment", format!(
-                "**Rod:** {}\n**Reel:** {}\n**Line:** {}\n**Sinker:** {}\n**Bait:** {}\n**Depth Finder:** {}",
+
+            // Profile Stats
+            .description(format!(
+                "**💳 Balance:** {}\n**🐟 Total Catches:** {}/{}",
+                userfile.file.balance, userfile.file.total_catches, fish_count
+            ))
+
+            // Main Gear
+            .field("🎒 Fishing Gear", format!(
+                "🎣 **Rod:** {}\n⚙️ **Reel:** {}\n🧵 **Line:** {}\n⚓ **Sinker:** {}\n🪱 **Bait:** {}",
                 loadout.rod.name,
                 loadout.reel.name,
                 loadout.line.name,
                 loadout.sinker.name,
-                bait_display,
-                depth_finder_display
+                bait_display
             ), false)
-            // -- Loadout Performance --
-            .field("📊 Loadout Performance", format!(
-                "**Max Strength:** {}\n**Cast Speed:** {}\n**Catch Chance:** {}\n**Depth Range:** {}",
-                strength_stat, speed_stat, chance_stat, depth_stat
-            ), false);
 
-        // Create Response Message
-        let mut message = CreateInteractionResponseMessage::new()
-            .embed(embed);
+            // Performance Stats (Inline)
+            .field("📊 Stats", format!(
+                "**Strength:** {}\n**Speed:** {}\n**Luck:** {}\n**Depth:** {}",
+                loadout.get_total_strength_display(),
+                loadout.get_speed_multiplier_display(),
+                loadout.get_catch_chance_display(),
+                loadout.get_depth_range_display()
+            ), true)
 
-        // Attach the image
+            // Tech & Accessories
+            .field("📟 Tech & Accessories", tech_display, true);
+
+        // --- Send Response ---
+        let mut message = CreateInteractionResponseMessage::new().embed(embed);
+
         let attachment = CreateAttachment::path("./assets/rod_with_fish.png").await;
         if let Ok(file) = attachment {
             message = message.add_file(file);
         }
 
-        // Send
         let builder = CreateInteractionResponse::Message(message);
-
         if let Err(e) = data.command.create_response(&data.ctx, builder).await {
             nay!("Failed to send info message: {}", e);
         }

@@ -61,7 +61,7 @@ impl ShopCategory {
             Self::Reels => "Determines how fast you can reel in a catch. Faster reels reduce catch time.",
             Self::Lines => "Determines the maximum weight you can pull. Stronger lines prevent snapping.",
             Self::Sinkers => "Determines the depth range you can reach. Different fish live at different depths.",
-            Self::Bait => "Consumables that attract specific fish, sizes, or rarities. Refreshes daily.",
+            Self::Bait => "Consumables that attract specific fish, sizes, or rarities. Refreshes daily. See stored bait with `/bait`.",
             Self::Unique => "Special utility items that provide permanent bonuses or information.",
         }
     }
