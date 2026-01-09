@@ -11,12 +11,13 @@ use serenity::builder::CreateEmbedFooter;
 use crate::commands::{command_response_ephemeral, error_command_response};
 use crate::commands::game_tips::random_tip;
 use crate::data_management::config::Config;
+use crate::data_management::userfile::UserFile;
 use crate::fishing::fish_data::fish::{Fish, Pond};
 use crate::fishing::fish_data::rarity::FishRarity;
 use crate::fishing::rod_data::bait::Bait;
 use crate::helpers::generate_error_code;
 
-const MYSTERIOUS_MESSAGES: [&str;70] = [
+const MYSTERIOUS_MESSAGES: &[&str] = &[
     // Mysterious Comments
     "...",
     "I wonder what could be down there...",
@@ -94,6 +95,49 @@ const MYSTERIOUS_MESSAGES: [&str;70] = [
     "I should stretch more.",
 ];
 
+const MISSED_FISH_LINES: &[&str] = &[
+    "That one felt big!",
+    "Dont worry, it was probably just a boot.",
+    "If that was the big one, maybe it'll come back?",
+    "You let it go? How generous of you.",
+    "My grandmother reels faster than that... and she's been dead for years.",
+    "Oof. That looked expensive.",
+    "Was that a fish or a submarine? We'll never know now.",
+    "Slippery little devil, wasn't it?",
+    "Your line went slack. So did your pride.",
+    "I saw it! It was... massive. Shame nobody will believe you.",
+    "Next time, try asking it nicely to stay on the hook.",
+    "It's okay, the pond is full of fish. Just... not in your bucket.",
+    "I think it stole your bait, too. Rough day.",
+    "Did you forget to set the hook? Amateur mistake.",
+    "That one will definitely tell its friends about you.",
+    "You're feeding them well, at least. They appreciate the snack.",
+    "The one that got away... always the best story, isn't it?",
+    "I swear I saw a glimmer of gold scales. Oh well.",
+    "Maybe it was a ghost fish. Can't catch what isn't there.",
+    "Your reflexes are... *human*, aren't they?",
+    "You almost had it! ...Well, not really.",
+    "Maybe try using glue next time?",
+    "Gone. Just like the wind.",
+    "It spit the hook right back at you. How rude.",
+    "I wouldn't tell anyone about that miss if I were you.",
+    "That tug felt personal.",
+    "Maybe fishing isn't your calling. Have you tried knitting?",
+    "It looked at you and decided 'Nope'.",
+    "A swing and a miss!",
+];
+
+fn missed_fish(fish: &Fish, userfile: &UserFile) -> String {
+    let lost = if userfile.file.loadout.has_underwater_camera {
+        format!("You lost a {:.2} in {} weighing {:.2} lbs.", fish.size, fish.fish_type.name, fish.weight)
+    } else {
+        let lost_message = MISSED_FISH_LINES[rand::rng().random_range(0..MISSED_FISH_LINES.len())];
+        format!("{}", lost_message)
+    };
+
+    lost
+}
+
 pub struct CastHandler {
     ctx: Context,
     user: UserId,
@@ -140,10 +184,10 @@ command! {
                 return Ok(());
             };
 
-            crate::data_management::userfile::UserFile::read(&data.sender.id, guild_id)
+            UserFile::read(&data.sender.id, guild_id)
         };
         #[cfg(not(feature = "guild_relative_userdata"))]
-        let userfile = crate::data_management::userfile::UserFile::read(&data.sender.id);
+        let userfile = UserFile::read(&data.sender.id);
 
         // load the pond
         let Ok(pond) = Pond::load() else {
@@ -334,9 +378,9 @@ pub async fn catch(catch: CastHandler) {
     ).await;
 
     #[cfg(feature = "guild_relative_userdata")]
-    let mut userfile = crate::data_management::userfile::UserFile::read(&catch.user, &catch.interaction.guild_id.unwrap());
+    let mut userfile = UserFile::read(&catch.user, &catch.interaction.guild_id.unwrap());
     #[cfg(not(feature = "guild_relative_userdata"))]
-    let mut userfile = crate::data_management::userfile::UserFile::read(&catch.user);
+    let mut userfile = UserFile::read(&catch.user);
 
     let config = Config::load();
 
@@ -402,10 +446,12 @@ pub async fn catch(catch: CastHandler) {
         say!("{}'s catch chance was {}%", catch.interaction.user.display_name(), (chance * 100.0) as u32);
     }
     if !caught {
+        let lost = missed_fish(&fish, &userfile);
+
         let embed = CreateEmbed::new()
             .title("💨 The fish got away!")
-            .description(format!("The fish slipped off the hook. Better luck next time!\n\nYou lost a {:.2} in {} weighing {:.2} lbs.",
-                                 fish.size, fish.fish_type.name, fish.weight))
+            .description(format!("The fish slipped off the hook. Better luck next time!\n\n{}",
+                                 lost))
             .thumbnail("attachment://FishingRod.png")
             .color(0x3498db)
             .footer(CreateEmbedFooter::new(format!("{}", random_tip())));
@@ -514,10 +560,12 @@ pub async fn catch(catch: CastHandler) {
                 userfile.file.loadout.bait = None;
                 userfile.update();
 
+                let lost = missed_fish(&fish, &userfile);
+
                 let embed = CreateEmbed::new()
                     .title("💥 SNAP!")
-                    .description(format!("You typed the wrong code (`{}`). The line broke!\n\nYou lost a {:.2} in {} weighing {:.2} lbs.",
-                                         user_input, fish.size, fish.fish_type.name, fish.weight))
+                    .description(format!("You typed the wrong code (`{}`). {}",
+                                         user_input, lost))
                     .color(Color::RED);
 
                 let message = CreateMessage::new()
@@ -536,10 +584,12 @@ pub async fn catch(catch: CastHandler) {
             userfile.file.loadout.bait = None;
             userfile.update();
 
+            let lost = missed_fish(&fish, &userfile);
+
             let embed = CreateEmbed::new()
                 .title("💥 SNAP!")
-                .description(format!("You weren't fast enough and your line snapped!\n\nYou lost a {:.2} in {} weighing {:.2} lbs.",
-                                     fish.size, fish.fish_type.name, fish.weight))
+                .description(format!("You weren't fast enough and your line snapped!\n\n{}",
+                                     lost))
                 .color(Color::RED);
 
             let message = CreateMessage::new()

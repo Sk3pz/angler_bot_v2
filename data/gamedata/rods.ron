@@ -48,7 +48,7 @@
         efficiency_multiplier: 1.5,
     ),
     (
-        name: "Bent-Butt Deep Drop",
+        name: "Deep Dropper",
         description: "Angled handle keeps the rod level under extreme load. Essential for deep sea drops.",
         price: 25000.0,
         sensitivity: 1.6,
