@@ -442,7 +442,7 @@ pub async fn catch(catch: CastHandler) {
         let base = config.fishing.base_catch_chance;
         let sensitivity = userfile.file.loadout.catch_chance_multiplier();
         let fight_chance = fish.category.fight_multiplier();
-        let chance = (base * sensitivity) / fight_chance;
+        let chance = (base + sensitivity) / fight_chance;
         say!("{}'s catch chance was {}%", catch.interaction.user.display_name(), (chance * 100.0) as u32);
     }
     if !caught {
