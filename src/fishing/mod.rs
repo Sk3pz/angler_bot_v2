@@ -8,6 +8,7 @@ use crate::error::ReelError;
 pub mod depth;
 pub mod fish_data;
 pub mod rod_data;
+mod shop;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Attribute {

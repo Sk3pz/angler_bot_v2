@@ -1,0 +1,12 @@
+(
+    base_names: [
+        "Worm",
+        "Cricket",
+        "Minnow",
+        "Grub",
+        "Leech",
+        "Shrimp",
+        "Squid",
+    ],
+    // Adjectives for size/weight/etc are handled in code
+)
