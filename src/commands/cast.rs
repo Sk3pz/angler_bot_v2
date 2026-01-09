@@ -619,9 +619,9 @@ pub async fn catch(catch: CastHandler) {
         .fields(
             vec![
                 ("📏 Size", format!("{:.2} in", fish.size), true),
-                ("⚖️ Weight", format!("{:.2} lbs", fish.weight), false),
+                ("⚖️ Weight", format!("{:.2} lbs", fish.weight), true),
                 ("💲 Value", format!("{}", earnings), true),
-                ("💰 New balance", format!("{}", userfile.file.balance), false),
+                ("💰 New balance", format!("{}", userfile.file.balance), true),
             ]
         )
         .color(Color::GOLD)
