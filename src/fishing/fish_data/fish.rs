@@ -236,8 +236,7 @@ impl Pond {
                     let (min_depth, max_depth) = fish.depth_range;
                     let (depth_min, depth_max) = depth.get_range();
                     let possible_rarities = rarity.get_possible();
-                    // use OR instead of AND because we want to include fish that have depth ranges that overlap the given depth
-                    ((min_depth <= depth_max) || (max_depth >= depth_min))
+                    ((min_depth <= depth_max) && (max_depth >= depth_min))
                     // check if the fish's rarity is in the possible rarities
                         && possible_rarities.contains(&fish.rarity)
                 })
