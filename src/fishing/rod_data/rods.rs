@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RodBase {
     pub name: String,
+    pub description: String,
     pub price: f32,
     /// How likely it is to hook a fish (affects catch chance)
     /// 1.0 = Standard chance

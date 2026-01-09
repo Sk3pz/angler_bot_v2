@@ -82,6 +82,8 @@ pub enum BaitAttraction {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Bait {
     pub name: String,
+    pub description: String,
+    pub price: String,
     /// Chance the bait will be used up after a catch.
     /// 0.0 means it will never be used up, 1.0 means it will always be used up.
     /// some bait is one time use, some like lures can be used multiple times
