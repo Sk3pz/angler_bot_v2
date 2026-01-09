@@ -339,6 +339,12 @@ command! {
                 say!("{} clicked the cancel button!", data.sender.display_name());
                 canceled.store(true, Ordering::Relaxed);
 
+                // remove the user from the fishing set
+                {
+                    let mut fishing_set = users_fishing.lock().await;
+                    fishing_set.remove(&user_id);
+                }
+
                 let update_embed = CreateEmbed::new()
                     .title("🛑 Cast Canceled")
                     .description("You reeled in your line early.")
@@ -620,6 +626,7 @@ pub async fn catch(catch: CastHandler) {
             vec![
                 ("📏 Size", format!("{:.2} in", fish.size), true),
                 ("⚖️ Weight", format!("{:.2} lbs", fish.weight), true),
+                ("","".to_string(),false), // spacer
                 ("💲 Value", format!("{}", earnings), true),
                 ("💰 New balance", format!("{}", userfile.file.balance), true),
             ]

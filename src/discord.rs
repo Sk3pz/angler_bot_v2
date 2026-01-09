@@ -47,14 +47,14 @@ impl EventHandler for Handler {
 
         // unregister previous commands if in debug mode (debug mode means we are activtly developing and commands may change frequently)
         // note: for this to take effect on a client they must restart or hit Ctrl+R in discord.
-        if debug {
-            let commands = Command::get_global_commands(&ctx.http).await.unwrap();
-            for command in commands {
-                if let Err(e) = Command::delete_global_command(&ctx.http, command.id).await {
-                    nay!("Failed to delete command: {}", e);
-                }
-            }
-        }
+        // if debug {
+        //     let commands = Command::get_global_commands(&ctx.http).await.unwrap();
+        //     for command in commands {
+        //         if let Err(e) = Command::delete_global_command(&ctx.http, command.id).await {
+        //             nay!("Failed to delete command: {}", e);
+        //         }
+        //     }
+        // }
 
         // register commands
         for cmd in get_all_cmds() {

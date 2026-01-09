@@ -3,7 +3,7 @@ use crate::data_management::userfile::UserFile;
 use serenity::all::{
     ButtonStyle, ComponentInteractionDataKind, CreateActionRow, CreateButton, CreateEmbed,
     CreateEmbedFooter, CreateInteractionResponse, CreateInteractionResponseMessage,
-    EditInteractionResponse,
+    EditMessage,
 };
 use serenity::futures::StreamExt;
 use std::time::Duration;
@@ -13,10 +13,26 @@ command! {
     name: "bait",
     desc: "Open your bait bucket to view and equip bait.",
     run: async |data| {
+        // Start at 0 (The "No Bait" option)
         let mut index = 0;
         let mut feedback: Option<String> = None;
 
-        // Helper to load user file
+        // --- PREVENT EXPLOIT: Check if fishing ---
+        {
+            let fishing_set = data.handler.users_fishing.lock().await;
+            if fishing_set.contains(&data.sender.id) {
+                let embed = CreateEmbed::new()
+                    .title("🪣 Bait Bucket")
+                    .description("You can't change your bait while your rod is cast!")
+                    .color(0xFA5050); // Red for error
+
+                data.command.create_response(&data.ctx.http, CreateInteractionResponse::Message(
+                    CreateInteractionResponseMessage::new().embed(embed).ephemeral(true)
+                )).await.map_err(|e| e.to_string())?;
+                return Ok(());
+            }
+        }
+
         #[cfg(feature = "guild_relative_userdata")]
         let load_file = || UserFile::read(&data.sender.id, data.guild_id.unwrap());
         #[cfg(not(feature = "guild_relative_userdata"))]
@@ -24,11 +40,11 @@ command! {
 
         let mut user_file = load_file();
 
-        // Initial check for empty bucket
-        if user_file.file.bait_bucket.is_empty() {
+        // Empty bucket and no equipped bait check
+        if user_file.file.bait_bucket.is_empty() && user_file.file.loadout.bait.is_none() {
              let embed = CreateEmbed::new()
                 .title("🪣 Bait Bucket (Empty)")
-                .description("You have no bait!\nVisit the `/shop` to buy some.")
+                .description("You have no bait and nothing equipped!\nVisit the `/shop` to buy some.")
                 .color(0x2B2D31);
 
             data.command.create_response(&data.ctx.http, CreateInteractionResponse::Message(
@@ -47,7 +63,9 @@ command! {
 
         data.command.create_response(&data.ctx.http, CreateInteractionResponse::Message(response)).await.map_err(|e| e.to_string())?;
 
-        let message = data.command.get_response(&data.ctx.http).await.map_err(|e| e.to_string())?;
+        // FIX: Use `mut message` to allow direct editing later (solves the timeout closing issue)
+        let mut message = data.command.get_response(&data.ctx.http).await.map_err(|e| e.to_string())?;
+
         let mut collector = message.await_component_interactions(&data.ctx.shard)
             .timeout(Duration::from_secs(120))
             .stream();
@@ -56,17 +74,9 @@ command! {
             // Reload file to ensure fresh state
             user_file = load_file();
 
-            if user_file.file.bait_bucket.is_empty() {
-                 let embed = CreateEmbed::new()
-                    .title("🪣 Bait Bucket (Empty)")
-                    .description("You have ran out of bait!\nVisit the `/shop` to buy more.")
-                    .color(0x2B2D31);
-
-                let _ = interaction.create_response(&data.ctx.http, CreateInteractionResponse::UpdateMessage(
-                    CreateInteractionResponseMessage::new().embed(embed).components(vec![])
-                )).await;
-                break;
-            }
+            // Max index is the count of items.
+            // If we have 5 items, indices are 0 (No Bait), 1, 2, 3, 4, 5.
+            let max_index = user_file.file.bait_bucket.len();
 
             let custom_id = match &interaction.data.kind {
                 ComponentInteractionDataKind::Button => interaction.data.custom_id.clone(),
@@ -80,48 +90,50 @@ command! {
                     if index > 0 { index -= 1; }
                 },
                 "bait_down" => {
-                    if index < user_file.file.bait_bucket.len().saturating_sub(1) { index += 1; }
+                    if index < max_index { index += 1; }
                 },
                 "bait_equip" => {
-                    if let Some(bait) = user_file.file.bait_bucket.remove_index(index) {
-                        // If they already have bait equipped, put it back in the bucket?
-                        // For simplicity, let's say equipping DESTROYS the currently equipped bait (swapping)
-                        // OR we push the currently equipped bait back to the bucket.
-
-                        // Option A: Swap (Preserve old bait)
+                    if index == 0 {
+                        // === UNEQUIP LOGIC (No Bait) ===
                         if let Some(old_bait) = user_file.file.loadout.bait.take() {
                             user_file.file.bait_bucket.add(old_bait);
-                        }
-
-                        // Equip new bait
-                        let name = bait.name.clone();
-                        user_file.file.loadout.bait = Some(bait);
-                        user_file.update(); // Save changes
-
-                        feedback = Some(format!("Equipped **{}**!", name));
-
-                        // Adjust index if out of bounds after removal
-                        if index >= user_file.file.bait_bucket.len() && index > 0 {
-                            index -= 1;
+                            user_file.update();
+                            feedback = Some("Unequipped bait.".to_string());
+                        } else {
+                            feedback = Some("You aren't using any bait.".to_string());
                         }
                     } else {
-                        feedback = Some("Failed to equip bait.".to_string());
+                        // === EQUIP LOGIC (Specific Bait) ===
+                        // Adjust index because visual index 1 is actually array index 0
+                        let real_index = index - 1;
+
+                        if let Some(bait) = user_file.file.bait_bucket.remove_index(real_index) {
+                            // If we have old bait, put it back in the bucket
+                            if let Some(old_bait) = user_file.file.loadout.bait.take() {
+                                user_file.file.bait_bucket.add(old_bait);
+                            }
+
+                            // Equip new bait
+                            let name = bait.name.clone();
+                            user_file.file.loadout.bait = Some(bait);
+                            user_file.update(); // Save changes
+
+                            feedback = Some(format!("Equipped **{}**!", name));
+
+                            // Selection Correction
+                            // If we swapped items, the count is the same.
+                            // If we equipped from a full bucket into an empty hand, the count decreased.
+                            // We need to ensure the cursor doesn't go out of bounds.
+                            let new_max = user_file.file.bait_bucket.len();
+                            if index > new_max {
+                                index = new_max;
+                            }
+                        } else {
+                            feedback = Some("Failed to retrieve bait.".to_string());
+                        }
                     }
                 },
                 _ => {}
-            }
-
-            // If bucket became empty after equip (and it was the last one)
-            if user_file.file.bait_bucket.is_empty() && user_file.file.loadout.bait.is_some() {
-                 let embed = CreateEmbed::new()
-                    .title("🪣 Bait Bucket")
-                    .description(format!("### ✅ {}\n\n*Bucket is now empty.*", feedback.unwrap_or_default()))
-                    .color(0x2B2D31);
-
-                 let _ = interaction.create_response(&data.ctx.http, CreateInteractionResponse::UpdateMessage(
-                    CreateInteractionResponseMessage::new().embed(embed).components(vec![])
-                )).await;
-                break;
             }
 
             let embed = build_bait_embed(&user_file, index, &feedback);
@@ -130,11 +142,17 @@ command! {
             )).await;
         }
 
-        // Close on timeout
+        // --- Timeout Handling ---
+        // Uses message.edit directly to ensure it actually closes
         let closed_embed = CreateEmbed::new()
             .title("🪣 Bait Bucket - Closed")
+            .description("Session timed out.")
             .color(0x2B2D31);
-        let _ = data.command.edit_response(&data.ctx.http, EditInteractionResponse::new().embed(closed_embed).components(vec![])).await;
+
+        let _ = message.edit(&data.ctx.http, EditMessage::new()
+            .embed(closed_embed)
+            .components(vec![])
+        ).await;
 
         Ok(())
     }
@@ -144,7 +162,8 @@ fn build_bait_embed(user_file: &UserFile, selected_index: usize, feedback: &Opti
     let mut description = String::new();
 
     if let Some(msg) = feedback {
-        description.push_str(&format!("### ✅ {}\n\n", msg));
+        let icon = if msg.contains("Failed") { "❌" } else { "✅" };
+        description.push_str(&format!("### {} {}\n\n", icon, msg));
     }
 
     let current_equipped = match &user_file.file.loadout.bait {
@@ -153,25 +172,38 @@ fn build_bait_embed(user_file: &UserFile, selected_index: usize, feedback: &Opti
     };
     description.push_str(&format!("🎣 **Currently Equipped:** {}\n\n", current_equipped));
 
+    // === Option 0: No Bait ===
+    if selected_index == 0 {
+        description.push_str("🔷 **No Bait**\n╰ *Unequip your current bait.*\n");
+    } else {
+        description.push_str("▪️ No Bait\n");
+    }
+
+    // === Option 1+: Actual Items ===
     for (i, bait) in user_file.file.bait_bucket.baits.iter().enumerate() {
-        if i == selected_index {
+        let display_index = i + 1;
+        if display_index == selected_index {
             description.push_str(&format!("🔷 **{}**\n╰ *{}*\n", bait.name, bait.description));
         } else {
             description.push_str(&format!("▪️ {}\n", bait.name));
         }
     }
 
+    if user_file.file.bait_bucket.is_empty() {
+        description.push_str("\n*Your bucket is empty. Visit /shop to buy more.*");
+    }
+
     CreateEmbed::new()
         .title("🪣 Bait Bucket")
         .description(description)
         .color(0x2B2D31)
-        .footer(CreateEmbedFooter::new(format!("Items: {}", user_file.file.bait_bucket.len())))
+        .footer(CreateEmbedFooter::new(format!("Items: {} | This will close in 2 minutes to save resources.", user_file.file.bait_bucket.len())))
 }
 
 fn build_bait_components() -> Vec<CreateActionRow> {
     let up = CreateButton::new("bait_up").label("▲ Up").style(ButtonStyle::Primary);
     let down = CreateButton::new("bait_down").label("▼ Down").style(ButtonStyle::Primary);
-    let equip = CreateButton::new("bait_equip").label("🎣 Equip Selected").style(ButtonStyle::Success);
+    let equip = CreateButton::new("bait_equip").label("🎣 Select").style(ButtonStyle::Success);
 
     vec![
         CreateActionRow::Buttons(vec![up, down]),
