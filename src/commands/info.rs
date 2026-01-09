@@ -58,8 +58,8 @@ command! {
 
             // Profile Stats
             .description(format!(
-                "**💳 Balance:** {}\n**🐟 Total Catches:** {}/{}",
-                userfile.file.balance, userfile.file.total_catches, fish_count
+                "**💳 Balance:** {}\n**🐟 Total Catches:** {}\n🐟 **Fish Discovered:** {}/{}\n",
+                userfile.file.balance, userfile.file.total_catches, userfile.file.caught_fish.len(), fish_count
             ))
 
             // Main Gear

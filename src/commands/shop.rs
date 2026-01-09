@@ -393,7 +393,7 @@ fn build_shop_embed(
         .description(description)
         .color(0x2B2D31)
         .footer(CreateEmbedFooter::new(format!(
-            "Bait refresh in: {}h {}m",
+            "Bait refresh in: {}h {}m | This will close in 2 minutes to save resources.",
             hours, minutes
         )))
 }

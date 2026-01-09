@@ -8,7 +8,6 @@ use serenity::{Client, all::GatewayIntents};
 mod commands;
 pub mod data_management;
 mod discord;
-pub mod embeds;
 pub mod error;
 pub mod fishing;
 pub mod helpers;

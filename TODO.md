@@ -13,6 +13,7 @@
 - [ ] Inventory system
   - [x] Bait Bucket
   - [ ] Junk / Treasure Inventory
+- [ ] First time cast tutorial with Darryl
 - [ ] Jerrie's Jumble
 - [x] Quick Time Events
   - [x] If the fish is out of bounds for the rod, a QTE will happen to give the user a chance to catch it
