@@ -11,7 +11,7 @@
   - [x] Information commands for current rod, money, and stats  
 - [x] On cast, show esoteric embed with a cancel button at the bottom.  
 - [ ] Inventory system
-  - [ ] Bait Bucket
+  - [x] Bait Bucket
   - [ ] Junk / Treasure Inventory
 - [ ] Jerrie's Jumble
 - [x] Quick Time Events
@@ -25,7 +25,7 @@
   - [ ] Junk / Trash - no value, just a nuisance (no longer treat them as a fish like v1)  
       - [ ] Lore stories & descriptions
   - [ ] Treasure - random amount of money or a random item (e.g., bait, rod upgrade - do you want to use it? prompt, etc.)  
-  - [ ] ~~Legendary Fish - rare fish with unique names and descriptions that can be caught (i.e. Loch Ness Monster, Giant Squid, etc.)~~  
+  - [x] ~~Legendary Fish - rare fish with unique names and descriptions that can be caught (i.e. Loch Ness Monster, Giant Squid, etc.)~~  
           (Moved to Mythical rarity, but are treated as normal fish)  
   - [ ] Seasonal Fish - fish that can only be caught during certain times of the year (e.g., Christmas fish, Halloween fish, etc.)  
           (Planned for distant future update)  

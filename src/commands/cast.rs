@@ -129,10 +129,10 @@ const MISSED_FISH_LINES: &[&str] = &[
 
 fn missed_fish(fish: &Fish, userfile: &UserFile) -> String {
     let lost = if userfile.file.loadout.has_underwater_camera {
-        format!("You lost a {:.2} in {} weighing {:.2} lbs.", fish.size, fish.fish_type.name, fish.weight)
+        format!("\nYou lost a {:.2} in {} weighing {:.2} lbs.", fish.size, fish.fish_type.name, fish.weight)
     } else {
         let lost_message = MISSED_FISH_LINES[rand::rng().random_range(0..MISSED_FISH_LINES.len())];
-        format!("{}", lost_message)
+        format!("**🧙 Strange Angler**\n{}", lost_message)
     };
 
     lost
@@ -450,7 +450,7 @@ pub async fn catch(catch: CastHandler) {
 
         let embed = CreateEmbed::new()
             .title("💨 The fish got away!")
-            .description(format!("The fish slipped off the hook. Better luck next time!\n\n{}",
+            .description(format!("The fish slipped off the hook.\n{}",
                                  lost))
             .thumbnail("attachment://FishingRod.png")
             .color(0x3498db)
@@ -564,7 +564,7 @@ pub async fn catch(catch: CastHandler) {
 
                 let embed = CreateEmbed::new()
                     .title("💥 SNAP!")
-                    .description(format!("You typed the wrong code (`{}`). {}",
+                    .description(format!("You typed the wrong code (`{}`).\n{}",
                                          user_input, lost))
                     .color(Color::RED);
 
@@ -588,7 +588,7 @@ pub async fn catch(catch: CastHandler) {
 
             let embed = CreateEmbed::new()
                 .title("💥 SNAP!")
-                .description(format!("You weren't fast enough and your line snapped!\n\n{}",
+                .description(format!("You weren't fast enough and your line snapped!\n{}",
                                      lost))
                 .color(Color::RED);
 
