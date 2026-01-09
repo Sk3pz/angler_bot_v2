@@ -1,22 +1,445 @@
 (
     fish_types: [
+        // --- BAIT FISH (Small, Common) ---
+        (
+            name: "Goldfish",
+            rarity: Common,
+            category: BaitFish,
+            size_range: (min: 1.0, max: 6.0, average: 3.0),
+            weight_range: (min: 0.1, max: 0.5, average: 0.2),
+            depth_range: (0.0, 20.0),
+            base_value: 5.0
+        ),
+        (
+            name: "Minnow",
+            rarity: Common,
+            category: BaitFish,
+            size_range: (min: 1.0, max: 4.0, average: 2.0),
+            weight_range: (min: 0.05, max: 0.2, average: 0.1),
+            depth_range: (0.0, 15.0),
+            base_value: 2.0
+        ),
+        (
+            name: "Sardine",
+            rarity: Common,
+            category: BaitFish,
+            size_range: (min: 6.0, max: 12.0, average: 8.0),
+            weight_range: (min: 0.2, max: 0.8, average: 0.4),
+            depth_range: (10.0, 100.0),
+            base_value: 4.0
+        ),
+        (
+            name: "Bluegill",
+            rarity: Common,
+            category: BaitFish,
+            size_range: (min: 4.0, max: 12.0, average: 7.0),
+            weight_range: (min: 0.5, max: 2.0, average: 1.0),
+            depth_range: (5.0, 30.0),
+            base_value: 8.0
+        ),
+
+        // --- SCHOOLING (Common/Uncommon, Easier Catch) ---
+        (
+            name: "Rainbow Trout",
+            rarity: Common,
+            category: Schooling,
+            size_range: (min: 12.0, max: 30.0, average: 16.0),
+            weight_range: (min: 2.0, max: 15.0, average: 6.0),
+            depth_range: (10.0, 60.0),
+            base_value: 15.0
+        ),
+        (
+            name: "Mackerel",
+            rarity: Common,
+            category: Schooling,
+            size_range: (min: 10.0, max: 20.0, average: 14.0),
+            weight_range: (min: 1.0, max: 5.0, average: 2.5),
+            depth_range: (20.0, 80.0),
+            base_value: 12.0
+        ),
+        (
+            name: "Yellow Perch",
+            rarity: Common,
+            category: Schooling,
+            size_range: (min: 5.0, max: 14.0, average: 8.0),
+            weight_range: (min: 0.5, max: 2.5, average: 1.0),
+            depth_range: (10.0, 50.0),
+            base_value: 10.0
+        ),
         (
             name: "Salmon",
             rarity: Uncommon,
-            category: Predatory,
-            size_range: (min: 24.0, max: 58.0, average: 36.0),
-            weight_range: (min: 10.0, max: 90.0, average: 30.0),
-            depth_range: (25.0, 150.0),
+            category: Schooling,
+            size_range: (min: 24.0, max: 50.0, average: 30.0),
+            weight_range: (min: 5.0, max: 40.0, average: 15.0),
+            depth_range: (20.0, 150.0),
+            base_value: 35.0
+        ),
+        (
+            name: "Crappie",
+            rarity: Common,
+            category: Schooling,
+            size_range: (min: 4.0, max: 15.0, average: 9.0),
+            weight_range: (min: 0.2, max: 2.5, average: 1.0),
+            depth_range: (5.0, 30.0),
+            base_value: 9.0
+        ),
+        (
+            name: "Mahi Mahi",
+            rarity: Uncommon,
+            category: Schooling,
+            size_range: (min: 20.0, max: 60.0, average: 35.0),
+            weight_range: (min: 10.0, max: 50.0, average: 25.0),
+            depth_range: (10.0, 80.0),
+            base_value: 40.0
+        ),
+
+
+        // --- ORNAMENTAL (Trophy, Valuable) ---
+        (
+            name: "Clownfish",
+            rarity: Uncommon,
+            category: Ornamental,
+            size_range: (min: 2.0, max: 5.0, average: 3.5),
+            weight_range: (min: 0.1, max: 0.4, average: 0.25),
+            depth_range: (15.0, 60.0),
             base_value: 50.0
         ),
         (
-            name: "Trout",
+            name: "Koi",
+            rarity: Rare,
+            category: Ornamental,
+            size_range: (min: 15.0, max: 36.0, average: 24.0),
+            weight_range: (min: 5.0, max: 25.0, average: 12.0),
+            depth_range: (5.0, 40.0),
+            base_value: 120.0
+        ),
+        (
+            name: "Angelfish",
+            rarity: Uncommon,
+            category: Ornamental,
+            size_range: (min: 3.0, max: 6.0, average: 4.5),
+            weight_range: (min: 0.2, max: 0.6, average: 0.4),
+            depth_range: (20.0, 80.0),
+            base_value: 45.0
+        ),
+        (
+            name: "Discus",
+            rarity: Rare,
+            category: Ornamental,
+            size_range: (min: 4.0, max: 9.0, average: 6.0),
+            weight_range: (min: 0.3, max: 1.0, average: 0.5),
+            depth_range: (10.0, 40.0),
+            base_value: 70.0
+        ),
+        (
+            name: "Lionfish",
+            rarity: Rare,
+            category: Ornamental,
+            size_range: (min: 8.0, max: 18.0, average: 12.0),
+            weight_range: (min: 1.0, max: 4.0, average: 2.5),
+            depth_range: (20.0, 100.0),
+            base_value: 95.0
+        ),
+
+        // --- BOTTOM FEEDER (Depth Matters) ---
+        (
+            name: "Channel Catfish",
+            rarity: Uncommon,
+            category: BottomFeeder,
+            size_range: (min: 12.0, max: 40.0, average: 20.0),
+            weight_range: (min: 5.0, max: 40.0, average: 15.0),
+            depth_range: (30.0, 120.0),
+            base_value: 25.0
+        ),
+        (
+            name: "Common Carp",
+            rarity: Common,
+            category: BottomFeeder,
+            size_range: (min: 15.0, max: 35.0, average: 22.0),
+            weight_range: (min: 8.0, max: 30.0, average: 15.0),
+            depth_range: (15.0, 60.0),
+            base_value: 18.0
+        ),
+        (
+            name: "Flounder",
+            rarity: Common,
+            category: BottomFeeder,
+            size_range: (min: 10.0, max: 25.0, average: 16.0),
+            weight_range: (min: 2.0, max: 10.0, average: 4.0),
+            depth_range: (30.0, 150.0),
+            base_value: 22.0
+        ),
+        (
+            name: "Sturgeon",
+            rarity: Elusive,
+            category: BottomFeeder,
+            size_range: (min: 40.0, max: 120.0, average: 72.0),
+            weight_range: (min: 50.0, max: 250.0, average: 120.0),
+            depth_range: (60.0, 300.0),
+            base_value: 200.0
+        ),
+        (
+            name: "Ocean Sunfish",
+            rarity: Rare,
+            category: Forager,
+            size_range: (min: 50.0, max: 120.0, average: 75.0),
+            weight_range: (min: 200.0, max: 2200.0, average: 1000.0),
+            depth_range: (0.0, 1000.0), // They sunbathe at surface but dive deep
+            base_value: 350.0
+        ),
+        (
+            name: "Red Snapper",
+            rarity: Uncommon,
+            category: BottomFeeder,
+            size_range: (min: 15.0, max: 40.0, average: 24.0),
+            weight_range: (min: 5.0, max: 35.0, average: 15.0),
+            depth_range: (30.0, 200.0),
+            base_value: 45.0
+        ),
+
+        // --- PREDATORY (Aggressive, Fight Harder) ---
+        (
+            name: "Largemouth Bass",
             rarity: Common,
             category: Predatory,
-            size_range: (min: 12.0, max: 30.0, average: 18.0),
-            weight_range: (min: 5.0, max: 20.0, average: 10.0),
-            depth_range: (10.0, 50.0),
+            size_range: (min: 12.0, max: 28.0, average: 16.0),
+            weight_range: (min: 2.0, max: 22.0, average: 6.0),
+            depth_range: (5.0, 35.0),
             base_value: 20.0
-        )
+        ),
+        (
+            name: "Northern Pike",
+            rarity: Uncommon,
+            category: Predatory,
+            size_range: (min: 20.0, max: 50.0, average: 32.0),
+            weight_range: (min: 5.0, max: 35.0, average: 12.0),
+            depth_range: (10.0, 60.0),
+            base_value: 40.0
+        ),
+        (
+            name: "Barracuda",
+            rarity: Rare,
+            category: Predatory,
+            size_range: (min: 24.0, max: 60.0, average: 40.0),
+            weight_range: (min: 10.0, max: 50.0, average: 25.0),
+            depth_range: (30.0, 150.0),
+            base_value: 80.0
+        ),
+        (
+            name: "Walleye",
+            rarity: Uncommon,
+            category: Predatory,
+            size_range: (min: 15.0, max: 32.0, average: 22.0),
+            weight_range: (min: 2.0, max: 18.0, average: 5.0),
+            depth_range: (20.0, 70.0),
+            base_value: 30.0
+        ),
+        (
+            name: "Muskellunge",
+            rarity: Rare,
+            category: Predatory,
+            size_range: (min: 28.0, max: 60.0, average: 40.0),
+            weight_range: (min: 15.0, max: 50.0, average: 25.0),
+            depth_range: (10.0, 50.0),
+            base_value: 85.0
+        ),
+
+        // --- FORAGER (Niche Fish) ---
+        (
+            name: "Pufferfish",
+            rarity: Uncommon,
+            category: Forager,
+            size_range: (min: 5.0, max: 20.0, average: 10.0),
+            weight_range: (min: 1.0, max: 8.0, average: 3.0),
+            depth_range: (10.0, 80.0),
+            base_value: 60.0
+        ),
+        (
+            name: "Eel",
+            rarity: Uncommon,
+            category: Forager,
+            size_range: (min: 20.0, max: 60.0, average: 35.0),
+            weight_range: (min: 2.0, max: 15.0, average: 5.0),
+            depth_range: (40.0, 150.0),
+            base_value: 45.0
+        ),
+
+        // --- ABYSSAL (Deep Sea, Rare, Valuable) ---
+        (
+            name: "Anglerfish",
+            rarity: Rare,
+            category: Abyssal,
+            size_range: (min: 8.0, max: 40.0, average: 20.0),
+            weight_range: (min: 5.0, max: 60.0, average: 25.0),
+            depth_range: (800.0, 2500.0),
+            base_value: 150.0
+        ),
+        (
+            name: "Blobfish",
+            rarity: Uncommon,
+            category: Abyssal,
+            size_range: (min: 10.0, max: 12.0, average: 11.0),
+            weight_range: (min: 15.0, max: 25.0, average: 20.0),
+            depth_range: (1000.0, 3000.0),
+            base_value: 90.0
+        ),
+        (
+            name: "Coelacanth",
+            rarity: Legendary,
+            category: Abyssal,
+            size_range: (min: 40.0, max: 80.0, average: 60.0),
+            weight_range: (min: 80.0, max: 200.0, average: 130.0),
+            depth_range: (1500.0, 4000.0),
+            base_value: 500.0
+        ),
+        (
+            name: "Viperfish",
+            rarity: Rare,
+            category: Abyssal,
+            size_range: (min: 8.0, max: 14.0, average: 12.0),
+            weight_range: (min: 0.5, max: 2.0, average: 1.0),
+            depth_range: (1200.0, 3500.0),
+            base_value: 110.0
+        ),
+        (
+            name: "Oarfish",
+            rarity: Legendary,
+            category: Abyssal,
+            size_range: (min: 120.0, max: 400.0, average: 200.0),
+            weight_range: (min: 50.0, max: 600.0, average: 300.0),
+            depth_range: (600.0, 3000.0),
+            base_value: 550.0
+        ),
+        (
+            name: "Gulper Eel",
+            rarity: Rare,
+            category: Abyssal,
+            size_range: (min: 24.0, max: 72.0, average: 40.0),
+            weight_range: (min: 2.0, max: 15.0, average: 5.0),
+            depth_range: (3000.0, 6000.0),
+            base_value: 180.0
+        ),
+        (
+            name: "Fangtooth",
+            rarity: Uncommon,
+            category: Abyssal,
+            size_range: (min: 3.0, max: 7.0, average: 5.0),
+            weight_range: (min: 0.1, max: 0.5, average: 0.2),
+            depth_range: (1500.0, 5000.0),
+            base_value: 85.0
+        ),
+
+        // --- APEX (Hard to Catch) ---
+        (
+            name: "Arapaima",
+            rarity: Legendary,
+            category: Apex,
+            size_range: (min: 60.0, max: 120.0, average: 80.0),
+            weight_range: (min: 100.0, max: 400.0, average: 200.0),
+            depth_range: (5.0, 40.0),
+            base_value: 450.0
+        ),
+        (
+            name: "Bluefin Tuna",
+            rarity: Elusive,
+            category: Apex,
+            size_range: (min: 60.0, max: 120.0, average: 90.0),
+            weight_range: (min: 400.0, max: 1200.0, average: 600.0),
+            depth_range: (50.0, 400.0),
+            base_value: 850.0
+        ),
+        (
+            name: "Swordfish",
+            rarity: Elusive,
+            category: Apex,
+            size_range: (min: 80.0, max: 180.0, average: 120.0),
+            weight_range: (min: 100.0, max: 1000.0, average: 300.0),
+            depth_range: (200.0, 1000.0),
+            base_value: 700.0
+        ),
+        (
+            name: "Goliath Grouper",
+            rarity: Elusive,
+            category: Apex,
+            size_range: (min: 40.0, max: 100.0, average: 70.0),
+            weight_range: (min: 200.0, max: 800.0, average: 400.0),
+            depth_range: (20.0, 150.0),
+            base_value: 600.0
+        ),
+        (
+            name: "Great White Shark",
+            rarity: Legendary,
+            category: Apex,
+            size_range: (min: 120.0, max: 240.0, average: 180.0),
+            weight_range: (min: 1000.0, max: 2500.0, average: 1500.0),
+            depth_range: (50.0, 800.0),
+            base_value: 1000.0
+        ),
+        (
+            name: "Blue Marlin",
+            rarity: Elusive,
+            category: Apex,
+            size_range: (min: 90.0, max: 170.0, average: 130.0),
+            weight_range: (min: 200.0, max: 1000.0, average: 500.0),
+            depth_range: (100.0, 600.0),
+            base_value: 750.0
+        ),
+        (
+            name: "Alligator Gar",
+            rarity: Elusive,
+            category: Apex,
+            size_range: (min: 60.0, max: 120.0, average: 90.0),
+            weight_range: (min: 100.0, max: 350.0, average: 200.0),
+            depth_range: (10.0, 50.0),
+            base_value: 400.0
+        ),
+        (
+            name: "Wels Catfish",
+            rarity: Rare,
+            category: Apex,
+            size_range: (min: 50.0, max: 150.0, average: 80.0),
+            weight_range: (min: 60.0, max: 300.0, average: 150.0),
+            depth_range: (30.0, 100.0),
+            base_value: 300.0
+        ),
+        (
+            name: "Hammerhead Shark",
+            rarity: Elusive,
+            category: Apex,
+            size_range: (min: 100.0, max: 200.0, average: 150.0),
+            weight_range: (min: 400.0, max: 1000.0, average: 600.0),
+            depth_range: (40.0, 400.0),
+            base_value: 600.0
+        ),
+        (
+            name: "Giant Squid",
+            rarity: Legendary,
+            category: Apex, // Technically not a fish, but acts as a boss encounter
+            size_range: (min: 200.0, max: 500.0, average: 350.0),
+            weight_range: (min: 300.0, max: 1000.0, average: 600.0),
+            depth_range: (1000.0, 4000.0),
+            base_value: 900.0
+        ),
+
+        // --- MYTHICAL (The One and Only) ---
+        (
+            name: "Loch Ness Monster",
+            rarity: Mythical,
+            category: Mythological,
+            size_range: (min: 300.0, max: 600.0, average: 450.0),
+            weight_range: (min: 2000.0, max: 8000.0, average: 5000.0),
+            depth_range: (100.0, 5000.0), // Can be found almost anywhere deep
+            base_value: 10000.0
+        ),
+        (
+            name: "Kraken",
+            rarity: Mythical,
+            category: Mythological,
+            size_range: (min: 500.0, max: 1000.0, average: 750.0),
+            weight_range: (min: 5000.0, max: 20000.0, average: 10000.0),
+            depth_range: (1000.0, 5000.0), // Found in the deepest parts of the ocean
+            base_value: 10000.0
+        ),
     ]
 )

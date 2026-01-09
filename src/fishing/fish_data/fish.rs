@@ -29,11 +29,13 @@ pub enum FishCategory {
     Apex,
     /// Rare fish found at the bottom of the ocean, often of high value but also very difficult to catch
     Abyssal,
+    Mythological,
 }
 
 impl FishCategory {
     pub fn fight_multiplier(&self) -> f32 {
         match self {
+            FishCategory::Mythological => 5.0,                      // Legendary fight!
             FishCategory::Apex => 2.5,                              // Boss fight!
             FishCategory::Predatory | FishCategory::Abyssal => 1.5, // Tough fight
             FishCategory::BottomFeeder => 1.2,                      // Moderate fight

@@ -8,6 +8,7 @@ use crate::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Sinker {
     pub name: String,
+    pub price: f32,
     /// weight of the sinker will add to the strain of the fish on the line and rod
     pub weight: f32,
     /// The depth category that the sinker is effective for.

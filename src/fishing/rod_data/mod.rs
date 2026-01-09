@@ -128,6 +128,7 @@ impl Default for RodLoadout {
         Self {
             rod: RodBase {
                 name: "Random Branch".to_string(),
+                price: 0.0,
                 // actually worse to fish with
                 sensitivity: 0.8,
                 strength_bonus: 0.8,
@@ -135,14 +136,17 @@ impl Default for RodLoadout {
             },
             line: Line {
                 name: "Dirty String".to_string(),
+                price: 0.0,
                 strength: 10, // with the Random Branch this will be 8, 7.8 with the Rock Sinker
             },
             reel: Reel {
                 name: "Rusty Can".to_string(),
+                price: 0.0,
                 speed_multiplier: 0.8,
             },
             sinker: Sinker {
                 name: "Rock".to_string(),
+                price: 0.0,
                 weight: 0.2,
                 depth_range: Attribute {
                     min: 0.0,
