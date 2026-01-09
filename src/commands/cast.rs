@@ -610,7 +610,11 @@ pub async fn catch(catch: CastHandler) {
     // add funds to the user's account
     let earnings = fish.value.clone();
     userfile.file.balance += earnings.clone();
-    // todo: add the fish type to the user's caught types if it's a new fish for them
+    if !userfile.file.caught_fish.contains(&fish.fish_type.name) {
+        // add the fish name to the user's caught fish types if it's not already there
+        userfile.file.caught_fish.push(fish.fish_type.name.clone());
+    }
+    userfile.file.total_catches += 1;
     userfile.update();
 
     let embed = CreateEmbed::new()
