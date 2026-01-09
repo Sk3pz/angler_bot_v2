@@ -1,0 +1,58 @@
+[
+    (
+        name: "Willow Branch",
+        price: 0.0,
+        sensitivity: 0.8,
+        strength_bonus: 0.8,
+        efficiency_multiplier: 0.8,
+    ),
+    (
+        name: "Bamboo Pole",
+        price: 150.0,
+        sensitivity: 1.0,
+        strength_bonus: 1.0,
+        efficiency_multiplier: 1.0,
+    ),
+    (
+        name: "Fiberglass Spinner",
+        price: 500.0,
+        sensitivity: 1.15,
+        strength_bonus: 1.2,
+        efficiency_multiplier: 1.1,
+    ),
+    (
+        name: "Graphite Baitcaster",
+        price: 1200.0,
+        sensitivity: 1.25,
+        strength_bonus: 1.4,
+        efficiency_multiplier: 1.2,
+    ),
+    (
+        name: "Carbon Surf Caster",
+        price: 3500.0,
+        sensitivity: 1.3,
+        strength_bonus: 1.6,
+        efficiency_multiplier: 1.3,
+    ),
+    (
+        name: "Offshore Troller",
+        price: 8000.0,
+        sensitivity: 1.4,
+        strength_bonus: 2.2,
+        efficiency_multiplier: 1.5,
+    ),
+    (
+        name: "Bent-Butt Deep Drop",
+        price: 25000.0,
+        sensitivity: 1.6,
+        strength_bonus: 3.5,
+        efficiency_multiplier: 1.8,
+    ),
+    (
+        name: "Titanium Class Unlimited",
+        price: 100000.0,
+        sensitivity: 2.0,
+        strength_bonus: 5.0,
+        efficiency_multiplier: 2.0,
+    ),
+]

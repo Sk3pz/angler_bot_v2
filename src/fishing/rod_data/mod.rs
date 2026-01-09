@@ -127,30 +127,29 @@ impl Default for RodLoadout {
     fn default() -> Self {
         Self {
             rod: RodBase {
-                name: "Random Branch".to_string(),
+                name: "Willow Branch".to_string(),
                 price: 0.0,
-                // actually worse to fish with
                 sensitivity: 0.8,
                 strength_bonus: 0.8,
                 efficiency_multiplier: 0.8,
             },
             line: Line {
-                name: "Dirty String".to_string(),
+                name: "Old String".to_string(),
                 price: 0.0,
-                strength: 10, // with the Random Branch this will be 8, 7.8 with the Rock Sinker
+                strength: 5,
             },
             reel: Reel {
-                name: "Rusty Can".to_string(),
+                name: "Tin Can".to_string(),
                 price: 0.0,
-                speed_multiplier: 0.8,
+                speed_multiplier: 0.7,
             },
             sinker: Sinker {
-                name: "Rock".to_string(),
+                name: "River Stone".to_string(),
                 price: 0.0,
-                weight: 0.2,
+                weight: 0.1,
                 depth_range: Attribute {
                     min: 0.0,
-                    max: 20.0,
+                    max: 15.0,
                     average: 5.0,
                 },
             },
