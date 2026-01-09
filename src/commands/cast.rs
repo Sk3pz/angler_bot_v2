@@ -93,6 +93,7 @@ const MYSTERIOUS_MESSAGES: &[&str] = &[
     "I think the developer forgot to program the bottom of this pond.",
     "I just remembered I don't like deep water.",
     "I should stretch more.",
+    "See that picture of me? I think it got my good side.",
 ];
 
 const MISSED_FISH_LINES: &[&str] = &[
