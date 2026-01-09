@@ -129,7 +129,7 @@ const MISSED_FISH_LINES: &[&str] = &[
 
 fn missed_fish(fish: &Fish, userfile: &UserFile) -> String {
     let lost = if userfile.file.loadout.has_underwater_camera {
-        format!("\nYou lost a {:.2} in {} weighing {:.2} lbs.", fish.size, fish.fish_type.name, fish.weight)
+        format!("\nYou lost a {:.2}' {} weighing {:.2} lbs.", fish.size, fish.fish_type.name, fish.weight)
     } else {
         let lost_message = MISSED_FISH_LINES[rand::rng().random_range(0..MISSED_FISH_LINES.len())];
         format!("**🧙 Strange Angler**\n{}", lost_message)
@@ -289,7 +289,7 @@ command! {
         .description("Waiting for a bite...".to_string())
         .fields(vec![
             ("🌊 Cast Depth", format!("{}", depth_display), false),
-            ("🧙 Strange Angler", format!("*{}*", random_mysterious_message), false),
+            ("🧙 Strange Angler", format!("*{}*", random_mysterious_message), false), // TODO: strange angler's name is darryl
         ])
         .thumbnail("attachment://FishingRod.png")
         .color(0x3498db)
