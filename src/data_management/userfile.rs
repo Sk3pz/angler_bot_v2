@@ -7,8 +7,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 use serenity::all::UserId;
 
-use crate::{data_management::monetary::MonetaryAmount, fishing::rod_data::RodLoadout, hey};
-use crate::fishing::bait_bucket::BaitBucket;
+use crate::{data_management::monetary::MonetaryAmount, hey};
 use crate::fishing::inventory::Inventory;
 
 const DATA_DIR: &str = "./data";

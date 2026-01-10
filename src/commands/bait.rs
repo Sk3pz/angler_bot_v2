@@ -32,13 +32,13 @@ command! {
                 return Ok(());
             }
         }
-        
+
         let load_file = || UserFile::read(&data.sender.id);
 
         let mut user_file = load_file();
 
         // Empty bucket and no equipped bait check
-        if user_file.file.bait_bucket.is_empty() && user_file.file.loadout.bait.is_none() {
+        if user_file.file.inventory.bait_bucket.is_empty() && user_file.file.inventory.selected_bait.is_none() {
              let embed = CreateEmbed::new()
                 .title("🪣 Bait Bucket (Empty)")
                 .description("You have no bait and nothing equipped!\nVisit the `/shop` to buy some.")
@@ -72,7 +72,7 @@ command! {
 
             // Max index is the count of items.
             // If we have 5 items, indices are 0 (No Bait), 1, 2, 3, 4, 5.
-            let max_index = user_file.file.bait_bucket.len();
+            let max_index = user_file.file.inventory.bait_bucket.len();
 
             let custom_id = match &interaction.data.kind {
                 ComponentInteractionDataKind::Button => interaction.data.custom_id.clone(),
@@ -91,12 +91,10 @@ command! {
                     else { index = 0; }
                 },
                 "bait_equip" => {
-                    // TODO: If the user is casting and had a bait bucket open, they can exploit
-
                     if index == 0 {
                         // === UNEQUIP LOGIC (No Bait) ===
-                        if let Some(old_bait) = user_file.file.loadout.bait.take() {
-                            user_file.file.bait_bucket.add(old_bait);
+                        if user_file.file.inventory.selected_bait.is_some() {
+                            user_file.file.inventory.selected_bait = None;
                             user_file.update();
                             feedback = Some("Unequipped bait.".to_string());
                         } else {
@@ -107,29 +105,21 @@ command! {
                         // Adjust index because visual index 1 is actually array index 0
                         let real_index = index - 1;
 
-                        if let Some(bait) = user_file.file.bait_bucket.remove_index(real_index) {
-                            // If we have old bait, put it back in the bucket
-                            if let Some(old_bait) = user_file.file.loadout.bait.take() {
-                                user_file.file.bait_bucket.add(old_bait);
-                            }
-
-                            // Equip new bait
+                        // Verify the item exists
+                        if let Some(bait) = user_file.file.inventory.bait_bucket.get(real_index) {
                             let name = bait.name.clone();
-                            user_file.file.loadout.bait = Some(bait);
-                            user_file.update(); // Save changes
+
+                            // Set the selected index
+                            user_file.file.inventory.selected_bait = Some(real_index);
+                            user_file.update();
 
                             feedback = Some(format!("Equipped **{}**!", name));
-
-                            // Selection Correction
-                            // If we swapped items, the count is the same.
-                            // If we equipped from a full bucket into an empty hand, the count decreased.
-                            // We need to ensure the cursor doesn't go out of bounds.
-                            let new_max = user_file.file.bait_bucket.len();
-                            if index > new_max {
-                                index = new_max;
-                            }
                         } else {
-                            feedback = Some("Failed to retrieve bait.".to_string());
+                            feedback = Some("Failed to find that bait.".to_string());
+                            // Reset index if out of bounds
+                            if index > user_file.file.inventory.bait_bucket.len() {
+                                index = 0;
+                            }
                         }
                     }
                 },
@@ -166,9 +156,10 @@ fn build_bait_embed(user_file: &UserFile, selected_index: usize, feedback: &Opti
         description.push_str(&format!("### {} {}\n\n", icon, msg));
     }
 
-    let current_equipped = match &user_file.file.loadout.bait {
-        Some(b) => &b.name,
-        None => "None",
+    // Get currently equipped bait name using the Inventory helper
+    let current_equipped = match user_file.file.inventory.get_loadout().bait {
+        Some(b) => b.name,
+        None => "None".to_string(),
     };
     description.push_str(&format!("🎣 **Currently Equipped:** {}\n\n", current_equipped));
 
@@ -180,16 +171,22 @@ fn build_bait_embed(user_file: &UserFile, selected_index: usize, feedback: &Opti
     }
 
     // === Option 1+: Actual Items ===
-    for (i, bait) in user_file.file.bait_bucket.baits.iter().enumerate() {
+    // We check which index is actually equipped in the inventory data
+    let actual_equipped_index = user_file.file.inventory.selected_bait;
+
+    for (i, bait) in user_file.file.inventory.bait_bucket.baits.iter().enumerate() {
         let display_index = i + 1;
+        let is_equipped = actual_equipped_index == Some(i);
+        let equipped_mark = if is_equipped { " *(Equipped)*" } else { "" };
+
         if display_index == selected_index {
-            description.push_str(&format!("🔷 **{}**\n╰ *{}*\n", bait.name, bait.description));
+            description.push_str(&format!("🔷 **{}{}**\n╰ *{}*\n", bait.name, equipped_mark, bait.description));
         } else {
-            description.push_str(&format!("▪️ {}\n", bait.name));
+            description.push_str(&format!("▪️ {}{}\n", bait.name, equipped_mark));
         }
     }
 
-    if user_file.file.bait_bucket.is_empty() {
+    if user_file.file.inventory.bait_bucket.is_empty() {
         description.push_str("\n*Your bucket is empty. Visit /shop to buy more.*");
     }
 
@@ -197,7 +194,7 @@ fn build_bait_embed(user_file: &UserFile, selected_index: usize, feedback: &Opti
         .title("🪣 Bait Bucket")
         .description(description)
         .color(0x2B2D31)
-        .footer(CreateEmbedFooter::new(format!("Items: {} | This closes automatically after 2min of inactivity", user_file.file.bait_bucket.len())))
+        .footer(CreateEmbedFooter::new(format!("Items: {} | This closes automatically after 2min of inactivity", user_file.file.inventory.bait_bucket.len())))
 }
 
 fn build_bait_components() -> Vec<CreateActionRow> {

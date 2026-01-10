@@ -127,9 +127,10 @@ const MISSED_FISH_LINES: &[&str] = &[
     "A swing and a miss!",
 ];
 
-fn missed_fish(fish: &Fish, userfile: &UserFile) -> Vec<(String, String, bool)> {
+fn missed_fish(fish: &Fish, user_file: &UserFile) -> Vec<(String, String, bool)> {
     let lost_message = MISSED_FISH_LINES[rand::rng().random_range(0..MISSED_FISH_LINES.len())];
-    let lost = if userfile.file.loadout.has_underwater_camera {
+    // Check inventory flags instead of loadout
+    let lost = if user_file.file.inventory.underwater_cam {
         vec![
             ("📹 Underwater Camera".to_string(), format!("You lost a {:.2}' {} weighing {:.2} lbs.", fish.size, fish.fish_type.name, fish.weight), false),
             ("🧙 Strange Angler Darryl".to_string(), format!("That would've been {}!", fish.value), false)
@@ -181,7 +182,7 @@ command! {
 
 
         // get the user file
-        let userfile = UserFile::read(&data.sender.id);
+        let user_file = UserFile::read(&data.sender.id);
 
         // load the pond
         let Ok(pond) = Pond::load() else {
@@ -190,7 +191,8 @@ command! {
             return Ok(());
         };
 
-        let loadout = userfile.file.loadout.clone();
+        // Construct a loadout snapshot from the inventory
+        let loadout = user_file.file.inventory.get_loadout();
 
         let Ok(generated_depth) = loadout.sinker.generate_depth() else {
             // Sinker Failure To Generate Error
@@ -347,7 +349,8 @@ command! {
 
         // create the embed
 
-        let depth_display = if userfile.file.loadout.has_depth_finder {
+        // Check inventory for depth finder support
+        let depth_display = if user_file.file.inventory.depth_finder {
             format!("{:.2} ft", generated_depth)
         } else {
             "??? ft".to_string()
@@ -430,16 +433,9 @@ command! {
             }
         }
 
-        // command_response_ephemeral(&data.ctx, &data.command, format!("You have cast your `{}` into the pond!\n\n{}", loadout.rod.name, random_mysterious_message)).await;
         Ok(())
     }
 }
-
-// async fn send_catch_message<S: Into<String>>(catch: &CastHandler, content: S) {
-//     catch.channel.send_message(&catch.ctx.http,
-//                          CreateMessage::new()
-//                              .content(content.into())).await.unwrap();
-// }
 
 pub async fn catch(catch: CastHandler) {
     // check if the cast was canceled during that time
@@ -452,18 +448,26 @@ pub async fn catch(catch: CastHandler) {
                                             EditInteractionResponse::new()
                                                 .components(vec![]), // Empty components vector removes buttons
     ).await;
-    
-    let mut userfile = UserFile::read(&catch.user);
+
+    let mut user_file = UserFile::read(&catch.user);
 
     let config = Config::load();
 
-    // Use up the user's bait if they had any
-    if let Some(bait) = &userfile.file.loadout.bait {
-        // I don't think this check is needed, but just in case I'll leave it here
-        if !bait.reusable {
-            // bait is used up
-            userfile.file.loadout.bait = None;
-            userfile.update();
+    // Use up the user's bait if they had any (Inventory Update)
+    if let Some(index) = user_file.file.inventory.selected_bait {
+        // We verify the bait exists
+        let should_remove = if let Some(bait) = user_file.file.inventory.bait_bucket.get(index) {
+            !bait.reusable
+        } else {
+            false
+        };
+
+        if should_remove {
+            // Remove the item physically from the bucket
+            user_file.file.inventory.bait_bucket.remove_index(index);
+            // Unequip since the item is gone
+            user_file.file.inventory.selected_bait = None;
+            user_file.update();
         }
     }
 
@@ -499,23 +503,23 @@ pub async fn catch(catch: CastHandler) {
             nay!("Failed to send cast response message: {}", e);
             return;
         }
-        // send_catch_message(&catch,
-        //                    format!("{} You felt your line go taught but nothing came up. Better luck next time!",
-        //                             catch.user.mention())).await;
         return;
     };
 
+    // Get snapshot of loadout for calculations
+    let loadout = user_file.file.inventory.get_loadout();
+
     // Catch chance didn't succeed
-    let caught = fish.try_hook(&userfile.file.loadout);
+    let caught = fish.try_hook(&loadout);
     if config.general.log_cast_data {
         let base = config.fishing.base_catch_chance;
-        let sensitivity = userfile.file.loadout.catch_chance_multiplier();
+        let sensitivity = loadout.catch_chance_multiplier();
         let fight_chance = fish.category.fight_multiplier();
         let chance = (base + sensitivity) / fight_chance;
         say!("{}'s catch chance was {}%", catch.interaction.user.display_name(), (chance * 100.0) as u32);
     }
     if !caught {
-        let lost = missed_fish(&fish, &userfile);
+        let lost = missed_fish(&fish, &user_file);
 
         let embed = CreateEmbed::new()
             .title("💨 The fish got away!")
@@ -540,27 +544,16 @@ pub async fn catch(catch: CastHandler) {
             nay!("Failed to send cast response message: {}", e);
             return;
         }
-        // send_catch_message(&catch,
-        //                    format!("{} You felt a tug on your line but the {} got away! Better luck next time!",
-        //                             catch.user.mention(), fish.fish_type.name)).await;
         return;
     }
 
     // Weight Check
     // calculate the total weight load on the line (fish weight + sinker weight)
-    let weight_load = fish.weight + userfile.file.loadout.sinker.weight;
-    let max_weight = userfile.file.loadout.total_strength();
+    let weight_load = fish.weight + loadout.sinker.weight;
+    let max_weight = loadout.total_strength();
 
     if weight_load > max_weight {
         // Quick Time Event (QTE)
-
-        // Generate the random code
-        // let code: String = rand::rng()
-        //     .sample_iter(&Alphanumeric)
-        //     .take(5)
-        //     .map(char::from)
-        //     .collect();
-
         // 5 digit numeric code
         let code = rand::rng().random_range(10000..99999).to_string();
 
@@ -627,11 +620,14 @@ pub async fn catch(catch: CastHandler) {
             } else {
                 // FAILURE
 
-                // remove any bait the user may have
-                userfile.file.loadout.bait = None;
-                userfile.update();
+                // remove any bait the user may have (Snap Logic)
+                if let Some(index) = user_file.file.inventory.selected_bait {
+                    user_file.file.inventory.bait_bucket.remove_index(index);
+                    user_file.file.inventory.selected_bait = None;
+                    user_file.update();
+                }
 
-                let lost = missed_fish(&fish, &userfile);
+                let lost = missed_fish(&fish, &user_file);
 
                 let embed = CreateEmbed::new()
                     .title("💥 SNAP!")
@@ -653,11 +649,14 @@ pub async fn catch(catch: CastHandler) {
         } else {
             // TIMEOUT
 
-            // remove any bait the user may have
-            userfile.file.loadout.bait = None;
-            userfile.update();
+            // remove any bait the user may have (Snap Logic)
+            if let Some(index) = user_file.file.inventory.selected_bait {
+                user_file.file.inventory.bait_bucket.remove_index(index);
+                user_file.file.inventory.selected_bait = None;
+                user_file.update();
+            }
 
-            let lost = missed_fish(&fish, &userfile);
+            let lost = missed_fish(&fish, &user_file);
 
             let embed = CreateEmbed::new()
                 .title("💥 SNAP!")
@@ -676,19 +675,16 @@ pub async fn catch(catch: CastHandler) {
         }
     }
 
-    // Treasure, Trash, Item, Turtle and other non-fish catches get handled here
-    // TODO - Later Update
-
     // Successful catch
     // add funds to the user's account
     let earnings = fish.value.clone();
-    userfile.file.balance += earnings.clone();
-    if !userfile.file.caught_fish.contains(&fish.fish_type.name) {
+    user_file.file.balance += earnings.clone();
+    if !user_file.file.caught_fish.contains(&fish.fish_type.name) {
         // add the fish name to the user's caught fish types if it's not already there
-        userfile.file.caught_fish.push(fish.fish_type.name.clone());
+        user_file.file.caught_fish.push(fish.fish_type.name.clone());
     }
-    userfile.file.total_catches += 1;
-    userfile.update();
+    user_file.file.total_catches += 1;
+    user_file.update();
 
     let embed = CreateEmbed::new()
         .title("✨ Fish Caught! ✨")
@@ -699,7 +695,7 @@ pub async fn catch(catch: CastHandler) {
                 ("⚖️ Weight", format!("{:.2} lbs", fish.weight), true),
                 ("","".to_string(),false), // spacer
                 ("💲 Value", format!("{}", earnings), true),
-                ("💰 New balance", format!("{}", userfile.file.balance), true),
+                ("💰 New balance", format!("{}", user_file.file.balance), true),
             ]
         )
         .color(Color::GOLD)

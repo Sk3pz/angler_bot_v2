@@ -35,8 +35,6 @@ pub fn convert_old_userfiles() {
     // loop through the files in ./data/users and convert them to the new format
     let path = std::path::Path::new("./data/users/old");
 
-    let new_path = std::path::Path::new("./data/users");
-
     // loop through all files in the directory
     for entry in fs::read_dir(path).unwrap() {
         let entry = entry.unwrap();
@@ -58,9 +56,28 @@ pub fn convert_old_userfiles() {
 
             // convert data to new format
             let uid = UserId::new(user_id);
-            let new_userfile = UserFile::new(&uid);
+            let mut new_userfile = UserFile::new(&uid);
 
             // todo: update userfile values with old userfile values
+
+            let mut file = &mut new_userfile.file;
+            file.balance = old_userfile.balance;
+            file.caught_fish = old_userfile.caught_fish;
+            file.total_catches = old_userfile.total_catches;
+
+            // convert inventory system
+            let loadout = old_userfile.loadout;
+            file.inventory.rods = vec![loadout.rod];
+            file.inventory.lines = vec![loadout.line];
+            file.inventory.reels = vec![loadout.reel];
+            file.inventory.sinkers = vec![loadout.sinker];
+            file.inventory.selected_rod = 0;
+            file.inventory.selected_line = 0;
+            file.inventory.selected_reel = 0;
+            file.inventory.selected_sinker = 0;
+            file.inventory.bait_bucket = old_userfile.bait_bucket;
+            file.inventory.depth_finder = loadout.has_depth_finder;
+            file.inventory.underwater_cam = loadout.has_underwater_camera;
 
             new_userfile.update();
 

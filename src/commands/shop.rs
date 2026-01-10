@@ -115,10 +115,9 @@ command! {
         let message = data.command.get_response(&data.ctx.http).await.map_err(|e| e.to_string())?;
 
         let mut collector = message.await_component_interactions(&data.ctx.shard)
-            // .timeout(Duration::from_secs(120)) // REMOVED: Fixed timeout removed to allow resetting
             .stream();
 
-        // MODIFIED: Use tokio::time::timeout on the stream.next() call to reset timer on every interaction
+        // Use tokio::time::timeout to reset timer on every interaction
         while let Ok(Some(interaction)) = tokio::time::timeout(Duration::from_secs(120), collector.next()).await {
             let custom_id = match &interaction.data.kind {
                 ComponentInteractionDataKind::Button => interaction.data.custom_id.clone(),
@@ -139,7 +138,6 @@ command! {
                     item_index = 0;
                 },
                 "shop_up" => {
-                    // MODIFIED: Loop to bottom
                     if item_index > 0 {
                         item_index -= 1;
                     } else {
@@ -149,7 +147,6 @@ command! {
                 },
                 "shop_down" => {
                     let max_items = get_item_count(&shop, category);
-                    // MODIFIED: Loop to top
                     if item_index < max_items.saturating_sub(1) {
                         item_index += 1;
                     } else {
@@ -175,7 +172,6 @@ command! {
         }
 
         // --- Timeout Handling ---
-        // We use data.command.edit_response because the message is ephemeral.
         let closed_embed = CreateEmbed::new()
             .title("🛒 Angler Shop - Closed")
             .description("Shop closed to save resources.\nReopen with `/shop` to continue browsing.")
@@ -219,37 +215,46 @@ fn handle_purchase(
             price = item.price;
             item_name = item.name.clone();
             if balance < price { return Err(format!("Insufficient funds! Need ${:.2}", price)); }
-            user_file.file.loadout.rod = item.clone();
+
+            // Add to inventory
+            user_file.file.inventory.rods.push(item.clone());
+            // Auto-equip (Select the new last item)
+            user_file.file.inventory.selected_rod = user_file.file.inventory.rods.len() - 1;
         },
         ShopCategory::Reels => {
             let item = shop.reels.get(index).ok_or("Item not found")?;
             price = item.price;
             item_name = item.name.clone();
             if balance < price { return Err(format!("Insufficient funds! Need ${:.2}", price)); }
-            user_file.file.loadout.reel = item.clone();
+
+            user_file.file.inventory.reels.push(item.clone());
+            user_file.file.inventory.selected_reel = user_file.file.inventory.reels.len() - 1;
         },
         ShopCategory::Lines => {
             let item = shop.lines.get(index).ok_or("Item not found")?;
             price = item.price;
             item_name = item.name.clone();
             if balance < price { return Err(format!("Insufficient funds! Need ${:.2}", price)); }
-            user_file.file.loadout.line = item.clone();
+
+            user_file.file.inventory.lines.push(item.clone());
+            user_file.file.inventory.selected_line = user_file.file.inventory.lines.len() - 1;
         },
         ShopCategory::Sinkers => {
             let item = shop.sinkers.get(index).ok_or("Item not found")?;
             price = item.price;
             item_name = item.name.clone();
             if balance < price { return Err(format!("Insufficient funds! Need ${:.2}", price)); }
-            user_file.file.loadout.sinker = item.clone();
+
+            user_file.file.inventory.sinkers.push(item.clone());
+            user_file.file.inventory.selected_sinker = user_file.file.inventory.sinkers.len() - 1;
         },
         ShopCategory::Bait => {
             let item = shop.state.daily_baits.get(index).ok_or("Item not found")?;
             price = item.price;
             item_name = item.name.clone();
             if balance < price { return Err(format!("Insufficient funds! Need ${:.2}", price)); }
-            //user_file.file.loadout.bait = Some(item.clone());
-            // add to the user's bait bucket instead of loadout, since bait is consumable
-            user_file.file.bait_bucket.add(item.clone());
+
+            user_file.file.inventory.bait_bucket.add(item.clone());
         },
         ShopCategory::Unique => {
             let item = UNIQUE_ITEMS.get(index).ok_or("Item not found")?;
@@ -260,16 +265,16 @@ fn handle_purchase(
 
             match index {
                 0 => { // Underwater Camera
-                    if user_file.file.loadout.has_underwater_camera {
+                    if user_file.file.inventory.underwater_cam {
                         return Err("You already own an Underwater Camera!".to_string());
                     }
-                    user_file.file.loadout.has_underwater_camera = true;
+                    user_file.file.inventory.underwater_cam = true;
                 },
                 1 => { // Depth Finder
-                    if user_file.file.loadout.has_depth_finder {
+                    if user_file.file.inventory.depth_finder {
                         return Err("You already own a Depth Finder!".to_string());
                     }
-                    user_file.file.loadout.has_depth_finder = true;
+                    user_file.file.inventory.depth_finder = true;
                 },
                 _ => return Err("Unknown Item".to_string()),
             }
@@ -324,22 +329,27 @@ fn build_shop_embed(
     match category {
         ShopCategory::Rods => {
             for (i, item) in shop.rods.iter().enumerate() {
-                add_item_line(i, &item.name, item.price, &item.description, false);
+                // Check if owned (by name check against inventory)
+                let owned = user_file.file.inventory.rods.iter().any(|r| r.name == item.name);
+                add_item_line(i, &item.name, item.price, &item.description, owned);
             }
         },
         ShopCategory::Reels => {
             for (i, item) in shop.reels.iter().enumerate() {
-                add_item_line(i, &item.name, item.price, &item.description, false);
+                let owned = user_file.file.inventory.reels.iter().any(|r| r.name == item.name);
+                add_item_line(i, &item.name, item.price, &item.description, owned);
             }
         },
         ShopCategory::Lines => {
             for (i, item) in shop.lines.iter().enumerate() {
-                add_item_line(i, &item.name, item.price, &item.description, false);
+                let owned = user_file.file.inventory.lines.iter().any(|r| r.name == item.name);
+                add_item_line(i, &item.name, item.price, &item.description, owned);
             }
         },
         ShopCategory::Sinkers => {
             for (i, item) in shop.sinkers.iter().enumerate() {
-                add_item_line(i, &item.name, item.price, &item.description, false);
+                let owned = user_file.file.inventory.sinkers.iter().any(|r| r.name == item.name);
+                add_item_line(i, &item.name, item.price, &item.description, owned);
             }
         },
         ShopCategory::Bait => {
@@ -353,8 +363,8 @@ fn build_shop_embed(
         ShopCategory::Unique => {
             for (i, item) in UNIQUE_ITEMS.iter().enumerate() {
                 let is_owned = match i {
-                    0 => user_file.file.loadout.has_depth_finder,
-                    1 => user_file.file.loadout.has_underwater_camera,
+                    0 => user_file.file.inventory.underwater_cam, // Camera (Index 0 in Array)
+                    1 => user_file.file.inventory.depth_finder,   // Depth Finder (Index 1 in Array)
                     _ => false,
                 };
                 add_item_line(i, item.name, item.price, item.description, is_owned);

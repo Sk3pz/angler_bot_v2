@@ -4,6 +4,7 @@ use crate::discord::Handler;
 use crate::fishing::Attribute;
 use crate::{data_management::config::Config, fishing::fish_data::fish::FishType};
 use serenity::{Client, all::GatewayIntents};
+use crate::data_management::version_uf_converter::convert_old_userfiles;
 
 mod commands;
 pub mod data_management;
@@ -104,6 +105,9 @@ async fn main() {
             return;
         };
     }
+
+    // update old userfiles
+    convert_old_userfiles();
 
     // get the env variables
     dotenv::dotenv().expect("Failed to load .env file");

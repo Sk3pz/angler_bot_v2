@@ -12,7 +12,7 @@ command! {
     run: async |data| {
         let userfile = UserFile::read(&data.sender.id);
 
-        let loadout = &userfile.file.loadout;
+        let loadout = &userfile.file.inventory.get_loadout();
 
         // --- Gear Formatting ---
         let bait_display = match &loadout.bait {
