@@ -13,6 +13,7 @@
 - [ ] Inventory system
   - [x] Bait Bucket
   - [ ] Junk / Treasure Inventory
+- [ ] Auto bait - setting in /bait to auto use the same bait if you have it
 - [ ] First time cast tutorial with Darryl
 - [ ] Jerrie's Jumble
 - [x] Quick Time Events
