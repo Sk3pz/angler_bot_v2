@@ -568,12 +568,14 @@ pub async fn catch(catch: CastHandler) {
         // Quick Time Event (QTE)
 
         // Generate the random code
-        // split the code by spaces to prevent copy + paste
-        let code: String = rand::rng()
-            .sample_iter(&Alphanumeric)
-            .take(5)
-            .map(char::from)
-            .collect();
+        // let code: String = rand::rng()
+        //     .sample_iter(&Alphanumeric)
+        //     .take(5)
+        //     .map(char::from)
+        //     .collect();
+
+        // 5 digit numeric code
+        let code = rand::rng().random_range(10000..99999).to_string();
 
         // add spaces between characters to prevent copy + paste
         let code_display = code.chars().map(|c| format!("{}", c)).collect::<Vec<String>>().join(" ");
