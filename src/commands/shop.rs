@@ -6,7 +6,7 @@ use chrono::Local;
 use serenity::all::{
     ButtonStyle, ComponentInteractionDataKind, CreateActionRow, CreateButton, CreateEmbed,
     CreateEmbedFooter, CreateInteractionResponse, CreateInteractionResponseMessage,
-    EditInteractionResponse, // We use this instead of EditMessage
+    EditInteractionResponse,
 };
 use serenity::futures::StreamExt;
 use std::time::Duration;
@@ -100,9 +100,6 @@ command! {
         let mut feedback: Option<(bool, String)> = None;
 
         // Initial Embed Construction
-        #[cfg(feature = "guild_relative_userdata")]
-        let embed = build_shop_embed(&shop, category, item_index, data.sender.id, data.guild_id, &feedback);
-        #[cfg(not(feature = "guild_relative_userdata"))]
         let embed = build_shop_embed(&shop, category, item_index, data.sender.id, &feedback);
 
         let components = build_shop_components();
@@ -160,10 +157,7 @@ command! {
                     }
                 },
                 "shop_buy" => {
-                    #[cfg(not(feature = "guild_relative_userdata"))]
                     let res = handle_purchase(&shop, category, item_index, data);
-                    #[cfg(feature = "guild_relative_userdata")]
-                    let res = handle_purchase(&shop, category, item_index, data, data.guild_id);
 
                     match res {
                         Ok(msg) => feedback = Some((true, msg)),
@@ -173,9 +167,6 @@ command! {
                 _ => {}
             }
 
-            #[cfg(feature = "guild_relative_userdata")]
-            let embed = build_shop_embed(&shop, category, item_index, data.sender.id, data.guild_id, &feedback);
-            #[cfg(not(feature = "guild_relative_userdata"))]
             let embed = build_shop_embed(&shop, category, item_index, data.sender.id, &feedback);
 
             let _ = interaction.create_response(&data.ctx.http, CreateInteractionResponse::UpdateMessage(
@@ -215,15 +206,7 @@ fn handle_purchase(
     category: ShopCategory,
     index: usize,
     data: &crate::commands::CommandData,
-    #[cfg(feature = "guild_relative_userdata")]
-    guild_id: Option<&serenity::all::GuildId>
 ) -> Result<String, String> {
-    #[cfg(feature = "guild_relative_userdata")]
-    let mut user_file = {
-        let guild_id = guild_id.expect("Guild ID should be present here");
-        UserFile::read(&data.sender.id, guild_id)
-    };
-    #[cfg(not(feature = "guild_relative_userdata"))]
     let mut user_file = UserFile::read(&data.sender.id);
 
     let balance = user_file.file.balance.get();
@@ -305,16 +288,8 @@ fn build_shop_embed(
     category: ShopCategory,
     selected_index: usize,
     user_id: serenity::all::UserId,
-    #[cfg(feature = "guild_relative_userdata")]
-    guild_id: Option<&serenity::all::GuildId>,
     feedback: &Option<(bool, String)>,
 ) -> CreateEmbed {
-    #[cfg(feature = "guild_relative_userdata")]
-    let user_file = {
-        let guild_id = guild_id.expect("Guild ID should be present here");
-        UserFile::read(&user_id, guild_id)
-    };
-    #[cfg(not(feature = "guild_relative_userdata"))]
     let user_file = UserFile::read(&user_id);
 
     let mut description = String::new();

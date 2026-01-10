@@ -3,7 +3,6 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tokio::sync::Mutex;
 use std::time::Duration;
-use rand::distr::Alphanumeric;
 use rand::Rng;
 use crate::{command, nay, say, wow};
 use serenity::all::{ButtonStyle, ChannelId, Color, CommandInteraction, Context, CreateActionRow, CreateAttachment, CreateButton, CreateEmbed, CreateInteractionResponse, CreateInteractionResponseMessage, CreateMessage, EditInteractionResponse, Mentionable, UserId};
@@ -182,17 +181,6 @@ command! {
 
 
         // get the user file
-        #[cfg(feature = "guild_relative_userdata")]
-        let userfile = {
-            let Some(guild_id) = data.guild_id else {
-                command_response_ephemeral(&data.ctx, &data.command,
-                    "You must be in a guild to execute that command!");
-                return Ok(());
-            };
-
-            UserFile::read(&data.sender.id, guild_id)
-        };
-        #[cfg(not(feature = "guild_relative_userdata"))]
         let userfile = UserFile::read(&data.sender.id);
 
         // load the pond
@@ -464,10 +452,7 @@ pub async fn catch(catch: CastHandler) {
                                             EditInteractionResponse::new()
                                                 .components(vec![]), // Empty components vector removes buttons
     ).await;
-
-    #[cfg(feature = "guild_relative_userdata")]
-    let mut userfile = UserFile::read(&catch.user, &catch.interaction.guild_id.unwrap());
-    #[cfg(not(feature = "guild_relative_userdata"))]
+    
     let mut userfile = UserFile::read(&catch.user);
 
     let config = Config::load();

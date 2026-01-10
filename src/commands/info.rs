@@ -1,6 +1,4 @@
 use serenity::all::{Color, CreateAttachment, CreateEmbed, CreateInteractionResponse, CreateInteractionResponseMessage};
-#[cfg(feature = "guild_relative_userdata")]
-use crate::commands::command_response_ephemeral;
 use crate::{command, nay};
 use crate::data_management::userfile::UserFile;
 use crate::fishing::fish_data::fish::Pond;
@@ -12,16 +10,6 @@ command! {
     requires_guild: false,
 
     run: async |data| {
-        #[cfg(feature = "guild_relative_userdata")]
-        let userfile = {
-            let Some(guild_id) = data.guild_id else {
-                command_response_ephemeral(&data.ctx, &data.command,
-                    "You must be in a guild to execute that command!").await;
-                return Ok(());
-            };
-            UserFile::read(&data.sender.id, guild_id)
-        };
-        #[cfg(not(feature = "guild_relative_userdata"))]
         let userfile = UserFile::read(&data.sender.id);
 
         let loadout = &userfile.file.loadout;

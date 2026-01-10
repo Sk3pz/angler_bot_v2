@@ -32,10 +32,7 @@ command! {
                 return Ok(());
             }
         }
-
-        #[cfg(feature = "guild_relative_userdata")]
-        let load_file = || UserFile::read(&data.sender.id, data.guild_id.unwrap());
-        #[cfg(not(feature = "guild_relative_userdata"))]
+        
         let load_file = || UserFile::read(&data.sender.id);
 
         let mut user_file = load_file();
