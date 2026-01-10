@@ -488,6 +488,8 @@ pub async fn catch(catch: CastHandler) {
         fishing_set.remove(&catch.user);
     }
 
+    // TODO: Junk, Trash, Treasure and etc here because it is a guaranteed catch
+
     // No fish on the line
     let Some(fish) = &catch.fish else {
         let embed = CreateEmbed::new()
