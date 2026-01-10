@@ -27,26 +27,6 @@ pub struct Inventory {
 
 impl Inventory {
 
-    pub fn new() -> Self {
-        let loadout = RodLoadout::default();
-        Self {
-            rods: vec![loadout.rod],
-            selected_rod: 0,
-            lines: vec![loadout.line],
-            selected_line: 0,
-            reels: vec![loadout.reel],
-            selected_reel: 0,
-            sinkers: vec![loadout.sinker],
-            selected_sinker: 0,
-
-            bait_bucket: BaitBucket::new(),
-            selected_bait: None,
-
-            underwater_cam: false,
-            depth_finder: false,
-        }
-    }
-
     fn get_selected_bait(&self) -> Option<Bait> {
         if let Some(index) = self.selected_bait {
             self.bait_bucket.get(index).cloned()
@@ -65,6 +45,28 @@ impl Inventory {
 
             has_underwater_camera: self.underwater_cam,
             has_depth_finder: self.depth_finder,
+        }
+    }
+}
+
+impl Default for Inventory {
+    fn default() -> Self {
+        let loadout = RodLoadout::default();
+        Self {
+            rods: vec![loadout.rod],
+            selected_rod: 0,
+            lines: vec![loadout.line],
+            selected_line: 0,
+            reels: vec![loadout.reel],
+            selected_reel: 0,
+            sinkers: vec![loadout.sinker],
+            selected_sinker: 0,
+
+            bait_bucket: BaitBucket::new(),
+            selected_bait: None,
+
+            underwater_cam: false,
+            depth_finder: false,
         }
     }
 }
