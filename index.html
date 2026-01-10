@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pond Depth Chart</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom Scrollbar to match the React app aesthetics */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-down {
+            animation: slideDown 0.3s ease-out forwards;
+        }
+        
+        .fish-card:hover .dotted-line {
+            opacity: 1;
+        }
+        
+        .fish-card:hover .mouse-icon {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 font-sans min-h-screen p-4">
+
+    <div id="app-container" class="max-w-5xl mx-auto transition-all duration-300">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-4 shrink-0">
+            <div>
+                <h1 class="text-xl font-bold text-slate-100 flex items-center gap-2">
+                    <i data-lucide="map" class="text-cyan-400 w-5 h-5"></i>
+                    Pond Depth Chart
+                </h1>
+            </div>
+            <div class="flex gap-2">
+                <button id="btn-fit" class="px-3 py-1.5 rounded text-sm font-semibold flex items-center gap-2 bg-slate-800 text-slate-300 hover:text-white transition-colors border border-slate-700 hover:border-slate-500">
+                    <i data-lucide="minimize-2" class="w-3.5 h-3.5" id="icon-fit"></i> <span id="text-fit">Fit</span>
+                </button>
+                <button id="btn-fullscreen" class="px-3 py-1.5 rounded text-sm font-semibold flex items-center gap-2 bg-slate-800 text-slate-300 hover:text-white transition-colors border border-slate-700 hover:border-slate-500">
+                    <i data-lucide="maximize" class="w-3.5 h-3.5" id="icon-fullscreen"></i> <span id="text-fullscreen">Full</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Visual Map -->
+        <!-- Added ID map-viewport for easier selection -->
+        <div id="map-viewport" class="relative w-full bg-slate-900 rounded-lg shadow-2xl border border-slate-800 select-none flex flex-col h-[600px] lg:h-[800px] overflow-hidden">
+            
+            <!-- Scrollable Container -->
+            <div class="flex-1 relative overflow-auto custom-scrollbar" id="map-scroll-container">
+                
+                <!-- Fixed Axis Overlay -->
+                <div class="sticky left-0 z-30 w-16 pointer-events-none float-left mr-[-4rem] h-[1200px]" id="axis-container">
+                    <div class="absolute top-0 bottom-0 left-0 w-16 bg-slate-950/80 backdrop-blur-md border-r border-white/10 z-30">
+                        <!-- Axis labels will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Inner Content (Dynamic Width) -->
+                <div id="map-content" class="relative bg-slate-900 h-[1200px]" style="min-width: 100px;">
+                    <!-- Background Gradient -->
+                    <div class="absolute inset-0 z-0 pointer-events-none" style="background: linear-gradient(to bottom, #4fc3f7 0%, #0284c7 20%, #0f172a 50%, #000000 100%);"></div>
+                    
+                    <!-- Grid Lines container -->
+                    <div id="grid-lines-container"></div>
+
+                    <!-- Labels -->
+                    <div class="absolute left-20 top-0 flex items-center text-cyan-200 text-xs font-bold uppercase tracking-widest z-10 py-1">
+                        <i data-lucide="waves" class="w-3 h-3 mr-1"></i> Surface
+                    </div>
+                    
+                    <!-- Abyss Label (Positioned dynamically in JS) -->
+                    <div id="abyss-label" class="absolute left-0 right-0 text-center text-indigo-900/30 font-black text-6xl tracking-[1rem] pointer-events-none select-none">
+                        ABYSS
+                    </div>
+
+                    <!-- Fish Items Container -->
+                    <div id="fish-items-container"></div>
+                </div>
+            </div>
+
+            <!-- Footer Hint -->
+            <div class="bg-slate-900 border-t border-slate-800 p-1 text-center text-[10px] text-slate-500 uppercase tracking-wider z-40 shrink-0">
+                Scroll Horizontal & Vertical for more • Click items for details
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Fish Detail Modal -->
+    <div id="fish-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 hidden animate-fade-in">
+        <div id="modal-content" class="bg-slate-900 border-2 p-6 rounded-xl shadow-2xl max-w-sm w-full relative overflow-hidden transition-all" onclick="event.stopPropagation()">
+            <button id="btn-close-modal" class="absolute top-2 right-2 text-slate-400 hover:text-white z-10">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            
+            <!-- Background Accent -->
+            <div id="modal-accent" class="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-20 blur-2xl pointer-events-none"></div>
+
+            <div class="flex flex-col gap-3 relative z-0">
+                <div class="flex gap-2 items-center">
+                    <span id="modal-category" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-opacity-80"></span>
+                    <span id="modal-rarity" class="text-xs font-bold uppercase tracking-widest"></span>
+                </div>
+                
+                <h2 id="modal-name" class="text-3xl font-black text-white leading-none"></h2>
+                
+                <div class="grid grid-cols-2 gap-3 mt-2">
+                    <div class="bg-slate-800/50 p-2 rounded border border-slate-700/50">
+                        <span class="block text-[10px] text-slate-500 uppercase font-bold">Avg Weight</span>
+                        <span class="text-lg font-mono text-slate-200"><span id="modal-weight"></span> <span class="text-xs text-slate-500">lbs</span></span>
+                    </div>
+                    <div class="bg-slate-800/50 p-2 rounded border border-slate-700/50">
+                        <span class="block text-[10px] text-slate-500 uppercase font-bold">Base Value</span>
+                        <span class="text-lg font-mono text-emerald-400">$<span id="modal-value"></span></span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 mt-2 text-slate-300 font-mono bg-slate-800 p-3 rounded-lg border border-slate-700">
+                    <div>
+                        <span class="block text-[10px] text-slate-500 uppercase">Min Depth</span>
+                        <span class="text-xl font-bold"><span id="modal-min"></span> ft</span>
+                    </div>
+                    <div class="h-8 w-px bg-slate-600"></div>
+                    <div>
+                        <span class="block text-[10px] text-slate-500 uppercase">Max Depth</span>
+                        <span class="text-xl font-bold"><span id="modal-max"></span> ft</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Data & State ---
+        const initialData = [
+            // BAIT FISH
+            { name: "Goldfish", rarity: "Common", category: "BaitFish", min: 0, max: 20, weight: 0.2, value: 5.0 },
+            { name: "Minnow", rarity: "Common", category: "BaitFish", min: 0, max: 15, weight: 0.1, value: 2.0 },
+            { name: "Sardine", rarity: "Common", category: "BaitFish", min: 10, max: 100, weight: 0.4, value: 4.0 },
+            { name: "Bluegill", rarity: "Common", category: "BaitFish", min: 5, max: 30, weight: 1.0, value: 8.0 },
+            // SCHOOLING
+            { name: "Rainbow Trout", rarity: "Common", category: "Schooling", min: 10, max: 60, weight: 6.0, value: 15.0 },
+            { name: "Mackerel", rarity: "Common", category: "Schooling", min: 20, max: 80, weight: 2.5, value: 12.0 },
+            { name: "Yellow Perch", rarity: "Common", category: "Schooling", min: 10, max: 50, weight: 1.0, value: 10.0 },
+            { name: "Salmon", rarity: "Uncommon", category: "Schooling", min: 20, max: 150, weight: 15.0, value: 35.0 },
+            { name: "Crappie", rarity: "Common", category: "Schooling", min: 5, max: 30, weight: 1.0, value: 9.0 },
+            { name: "Mahi Mahi", rarity: "Uncommon", category: "Schooling", min: 10, max: 80, weight: 25.0, value: 40.0 },
+            // ORNAMENTAL
+            { name: "Clownfish", rarity: "Uncommon", category: "Ornamental", min: 15, max: 60, weight: 0.25, value: 50.0 },
+            { name: "Koi", rarity: "Rare", category: "Ornamental", min: 5, max: 40, weight: 12.0, value: 120.0 },
+            { name: "Angelfish", rarity: "Uncommon", category: "Ornamental", min: 20, max: 80, weight: 0.4, value: 45.0 },
+            { name: "Discus", rarity: "Rare", category: "Ornamental", min: 10, max: 40, weight: 0.5, value: 70.0 },
+            { name: "Lionfish", rarity: "Rare", category: "Ornamental", min: 20, max: 100, weight: 2.5, value: 95.0 },
+            // BOTTOM FEEDER
+            { name: "Channel Catfish", rarity: "Uncommon", category: "BottomFeeder", min: 30, max: 120, weight: 15.0, value: 25.0 },
+            { name: "Common Carp", rarity: "Common", category: "BottomFeeder", min: 15, max: 60, weight: 15.0, value: 18.0 },
+            { name: "Flounder", rarity: "Common", category: "BottomFeeder", min: 30, max: 150, weight: 4.0, value: 22.0 },
+            { name: "Sturgeon", rarity: "Elusive", category: "BottomFeeder", min: 60, max: 300, weight: 120.0, value: 200.0 },
+            { name: "Ocean Sunfish", rarity: "Rare", category: "Forager", min: 0, max: 1000, weight: 1000.0, value: 350.0 },
+            { name: "Red Snapper", rarity: "Uncommon", category: "BottomFeeder", min: 30, max: 200, weight: 15.0, value: 45.0 },
+            // PREDATORY
+            { name: "Largemouth Bass", rarity: "Common", category: "Predatory", min: 5, max: 35, weight: 6.0, value: 20.0 },
+            { name: "Northern Pike", rarity: "Uncommon", category: "Predatory", min: 10, max: 60, weight: 12.0, value: 40.0 },
+            { name: "Barracuda", rarity: "Rare", category: "Predatory", min: 30, max: 150, weight: 25.0, value: 80.0 },
+            { name: "Walleye", rarity: "Uncommon", category: "Predatory", min: 20, max: 70, weight: 5.0, value: 30.0 },
+            { name: "Muskellunge", rarity: "Rare", category: "Predatory", min: 10, max: 50, weight: 25.0, value: 85.0 },
+            // FORAGER
+            { name: "Pufferfish", rarity: "Uncommon", category: "Forager", min: 10, max: 80, weight: 3.0, value: 60.0 },
+            { name: "Eel", rarity: "Uncommon", category: "Forager", min: 40, max: 150, weight: 5.0, value: 45.0 },
+            // ABYSSAL
+            { name: "Anglerfish", rarity: "Rare", category: "Abyssal", min: 800, max: 2500, weight: 25.0, value: 150.0 },
+            { name: "Blobfish", rarity: "Uncommon", category: "Abyssal", min: 1000, max: 3000, weight: 20.0, value: 90.0 },
+            { name: "Coelacanth", rarity: "Legendary", category: "Abyssal", min: 1500, max: 4000, weight: 130.0, value: 500.0 },
+            { name: "Viperfish", rarity: "Rare", category: "Abyssal", min: 1200, max: 3500, weight: 1.0, value: 110.0 },
+            { name: "Oarfish", rarity: "Legendary", category: "Abyssal", min: 600, max: 3000, weight: 300.0, value: 550.0 },
+            { name: "Gulper Eel", rarity: "Rare", category: "Abyssal", min: 3000, max: 6000, weight: 5.0, value: 180.0 },
+            { name: "Fangtooth", rarity: "Uncommon", category: "Abyssal", min: 1500, max: 5000, weight: 0.2, value: 85.0 },
+            // APEX
+            { name: "Arapaima", rarity: "Legendary", category: "Apex", min: 5, max: 40, weight: 200.0, value: 450.0 },
+            { name: "Bluefin Tuna", rarity: "Elusive", category: "Apex", min: 50, max: 400, weight: 600.0, value: 850.0 },
+            { name: "Swordfish", rarity: "Elusive", category: "Apex", min: 200, max: 1000, weight: 300.0, value: 700.0 },
+            { name: "Goliath Grouper", rarity: "Elusive", category: "Apex", min: 20, max: 150, weight: 400.0, value: 600.0 },
+            { name: "Great White Shark", rarity: "Legendary", category: "Apex", min: 50, max: 800, weight: 1500.0, value: 1000.0 },
+            { name: "Blue Marlin", rarity: "Elusive", category: "Apex", min: 100, max: 600, weight: 500.0, value: 750.0 },
+            { name: "Alligator Gar", rarity: "Elusive", category: "Apex", min: 10, max: 50, weight: 200.0, value: 400.0 },
+            { name: "Wels Catfish", rarity: "Rare", category: "Apex", min: 30, max: 100, weight: 150.0, value: 300.0 },
+            { name: "Hammerhead Shark", rarity: "Elusive", category: "Apex", min: 40, max: 400, weight: 600.0, value: 600.0 },
+            { name: "Giant Squid", rarity: "Legendary", category: "Apex", min: 1000, max: 4000, weight: 600.0, value: 900.0 },
+            // MYTHICAL
+            { name: "Loch Ness Monster", rarity: "Mythical", category: "Mythological", min: 100, max: 5000, weight: 5000.0, value: 10000.0 },
+            { name: "Kraken", rarity: "Mythical", category: "Mythological", min: 1000, max: 5000, weight: 10000.0, value: 10000.0 },
+        ];
+
+        let currentData = [...initialData];
+        let manualFullscreen = false; // fallback state
+        let isFitted = false;
+        
+        const DEFAULT_TOTAL_HEIGHT = 1200;
+        let currentTotalHeight = DEFAULT_TOTAL_HEIGHT;
+        
+        const MIN_LANE_WIDTH = 130;
+
+        // --- Styles & Constants ---
+
+        const getCategoryStyles = (category) => {
+            switch(category) {
+                case "Apex":
+                case "Predatory":
+                    return { bg: "bg-rose-500", text: "text-white", border: "border-rose-600", pill: "bg-rose-700" };
+                case "BaitFish":
+                    return { bg: "bg-emerald-400", text: "text-emerald-950", border: "border-emerald-500", pill: "bg-emerald-600/30" };
+                case "Mythological":
+                case "Legendary":
+                    return { bg: "bg-amber-400", text: "text-amber-950", border: "border-amber-500", pill: "bg-amber-600/30" };
+                case "Ornamental":
+                    return { bg: "bg-fuchsia-400", text: "text-fuchsia-950", border: "border-fuchsia-500", pill: "bg-fuchsia-600/30" };
+                case "Abyssal":
+                case "Deep Sea":
+                    return { bg: "bg-indigo-600", text: "text-indigo-100", border: "border-indigo-400", pill: "bg-indigo-900" };
+                case "BottomFeeder":
+                    return { bg: "bg-stone-500", text: "text-stone-100", border: "border-stone-400", pill: "bg-stone-700" };
+                case "Schooling":
+                    return { bg: "bg-blue-400", text: "text-blue-950", border: "border-blue-500", pill: "bg-blue-600/30" };
+                default:
+                    return { bg: "bg-sky-200", text: "text-sky-950", border: "border-sky-400", pill: "bg-sky-500/20" };
+            }
+        };
+
+        const getRarityColor = (rarity) => {
+            const r = rarity?.toLowerCase() || "";
+            if (r === "mythical") return "text-amber-300";
+            if (r === "legendary") return "text-orange-400";
+            if (r === "elusive") return "text-purple-400";
+            if (r === "rare") return "text-blue-400";
+            if (r === "uncommon") return "text-green-400";
+            return "text-slate-400";
+        };
+
+        const getDepthY = (depth) => {
+            if (depth <= 100) {
+                return (depth / 100) * (currentTotalHeight * 0.20);
+            } else if (depth <= 500) {
+                const base = currentTotalHeight * 0.20;
+                const range = 400; 
+                return base + ((depth - 100) / range) * (currentTotalHeight * 0.25);
+            } else if (depth <= 2000) {
+                const base = currentTotalHeight * 0.45;
+                const range = 1500;
+                return base + ((depth - 500) / range) * (currentTotalHeight * 0.30);
+            } else {
+                const base = currentTotalHeight * 0.75;
+                const range = 4000;
+                return base + ((depth - 2000) / range) * (currentTotalHeight * 0.25);
+            }
+        };
+
+        // --- Render Logic ---
+
+        function renderMap() {
+            // Sort
+            const sorted = [...currentData].sort((a, b) => {
+                if (a.min !== b.min) return a.min - b.min;
+                return b.weight - a.weight; 
+            });
+
+            // Layout Algorithm (Lanes)
+            const lanes = [];
+            const placedItems = sorted.map((fish) => {
+                const topY = getDepthY(fish.min);
+                const bottomY = getDepthY(fish.max);
+                const visualHeight = Math.max(28, bottomY - topY); 
+                const visualBottom = topY + visualHeight;
+
+                let assignedLane = -1;
+
+                for (let i = 0; i < lanes.length; i++) {
+                    const lane = lanes[i];
+                    const collision = lane.some(occupied => {
+                        return (topY < occupied.end + 2) && (visualBottom + 2 > occupied.start);
+                    });
+
+                    if (!collision) {
+                        assignedLane = i;
+                        lane.push({ start: topY, end: visualBottom });
+                        break;
+                    }
+                }
+
+                if (assignedLane === -1) {
+                    assignedLane = lanes.length;
+                    lanes.push([{ start: topY, end: visualBottom }]);
+                }
+
+                return { ...fish, top: topY, height: visualHeight, lane: assignedLane };
+            });
+
+            // Set Container Dimensions
+            const laneCount = lanes.length;
+            const contentWidth = Math.max(100, (laneCount * MIN_LANE_WIDTH) + 80);
+            const mapContent = document.getElementById('map-content');
+            mapContent.style.width = `${contentWidth}px`;
+            mapContent.style.height = `${currentTotalHeight}px`;
+
+            // Adjust axis container height to match
+            document.getElementById('axis-container').style.height = `${currentTotalHeight}px`;
+
+            // Setup DOM Elements
+            const fishContainer = document.getElementById('fish-items-container');
+            fishContainer.innerHTML = ''; // Clear previous
+
+            // Render Axis
+            const axisContainer = document.querySelector('#axis-container > div');
+            axisContainer.innerHTML = '';
+            [0, 20, 50, 100, 200, 500, 1000, 2000, 3000, 4000, 5000, 6000].forEach(d => {
+                const el = document.createElement('div');
+                el.className = 'absolute w-full flex items-center justify-end pr-2';
+                el.style.top = `${getDepthY(d)}px`;
+                // Updated Axis Style: Larger, Bold, Amber color
+                el.innerHTML = `<div class="w-2 h-px bg-amber-400/60 mr-1"></div><span class="text-xs text-amber-400 font-bold font-mono drop-shadow-sm">${d}</span>`;
+                axisContainer.appendChild(el);
+            });
+
+            // Render Grid Lines
+            const gridContainer = document.getElementById('grid-lines-container');
+            gridContainer.innerHTML = '';
+            [0, 100, 200, 500, 1000, 2000, 4000].forEach(d => {
+                const el = document.createElement('div');
+                el.className = 'absolute left-16 right-0 h-px bg-white/5 pointer-events-none';
+                el.style.top = `${getDepthY(d)}px`;
+                gridContainer.appendChild(el);
+            });
+
+            // Position Abyss Label
+            document.getElementById('abyss-label').style.top = `${getDepthY(4500)}px`;
+
+            // Render Fish
+            placedItems.forEach((fish, i) => {
+                const styles = getCategoryStyles(fish.category);
+                const rarityColor = getRarityColor(fish.rarity);
+                const leftPos = 64 + (fish.lane * MIN_LANE_WIDTH);
+
+                const fishEl = document.createElement('div');
+                fishEl.className = 'absolute transition-all duration-200 hover:z-50 group hover:scale-[1.02] cursor-pointer fish-card';
+                fishEl.style.top = `${fish.top}px`;
+                fishEl.style.height = `${fish.height}px`;
+                fishEl.style.left = `${leftPos}px`;
+                fishEl.style.width = `${MIN_LANE_WIDTH - 8}px`;
+                
+                // Store fish data on element for click handler
+                fishEl.dataset.json = JSON.stringify(fish);
+                fishEl.onclick = () => openModal(fish);
+
+                fishEl.innerHTML = `
+                    <div class="absolute top-0 h-px border-t border-dotted border-white/30 pointer-events-none opacity-0 transition-opacity dotted-line" style="width: ${leftPos}px; left: -${leftPos}px;"></div>
+                    <div class="h-full w-full rounded border ${styles.bg} ${styles.border} shadow-md flex flex-col p-1.5 overflow-hidden relative">
+                        <div class="flex justify-between items-start z-10">
+                            <span class="font-bold text-xs leading-tight ${styles.text} line-clamp-2">${fish.name}</span>
+                        </div>
+                        <div class="absolute top-1.5 right-1.5 opacity-50 text-[8px] uppercase font-black ${rarityColor}">
+                            ${(fish.rarity || "").substring(0, 1)}
+                        </div>
+                        <div class="mt-auto flex items-center justify-between opacity-80 z-10">
+                            <span class="text-[9px] font-mono font-bold ${styles.text}">${fish.min}-${fish.max}'</span>
+                            <i data-lucide="mouse-pointer-2" class="w-2.5 h-2.5 text-black/20 opacity-0 mouse-icon transition-opacity"></i>
+                        </div>
+                    </div>
+                `;
+                fishContainer.appendChild(fishEl);
+            });
+
+            // Re-initialize icons for new elements
+            lucide.createIcons();
+        }
+
+        // --- Modal Logic ---
+
+        function openModal(fish) {
+            const styles = getCategoryStyles(fish.category);
+            const rarityColor = getRarityColor(fish.rarity);
+            
+            const modal = document.getElementById('fish-modal');
+            const content = document.getElementById('modal-content');
+            const accent = document.getElementById('modal-accent');
+            
+            // Set content
+            document.getElementById('modal-name').innerText = fish.name;
+            document.getElementById('modal-category').innerText = fish.category;
+            document.getElementById('modal-category').className = `px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${styles.bg} ${styles.text} bg-opacity-80`;
+            
+            document.getElementById('modal-rarity').innerText = fish.rarity;
+            document.getElementById('modal-rarity').className = `text-xs font-bold uppercase tracking-widest ${rarityColor}`;
+
+            document.getElementById('modal-weight').innerText = fish.weight.toLocaleString();
+            document.getElementById('modal-value').innerText = fish.value.toLocaleString();
+            document.getElementById('modal-min').innerText = fish.min;
+            document.getElementById('modal-max').innerText = fish.max;
+
+            // Set Styles
+            content.className = `bg-slate-900 border-2 ${styles.border} p-6 rounded-xl shadow-2xl max-w-sm w-full relative overflow-hidden transition-all`;
+            accent.className = `absolute -top-10 -right-10 w-32 h-32 rounded-full ${styles.bg} opacity-20 blur-2xl pointer-events-none`;
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('fish-modal').classList.add('hidden');
+        }
+
+        document.getElementById('fish-modal').addEventListener('click', closeModal);
+        document.getElementById('btn-close-modal').addEventListener('click', closeModal);
+
+        function parseRonText(text) {
+             const fishList = [];
+             const blockRegex = /\(([\s\S]*?)\)/g;
+             let match;
+
+             while ((match = blockRegex.exec(text)) !== null) {
+                 const block = match[1];
+                 const getValue = (key) => {
+                     const regex = new RegExp(`${key}:\\s*([^,\n)]+)`);
+                     const m = block.match(regex);
+                     if (m) return m[1].trim().replace(/"/g, '');
+                     return null;
+                 };
+                 const getTuple = (key) => {
+                     const regex = new RegExp(`${key}:\\s*\\(([^)]+)\\)`);
+                     const m = block.match(regex);
+                     if (m) return m[1].split(',').map(s => parseFloat(s.trim()));
+                     return null;
+                 };
+                 const getStructField = (parentKey, fieldKey) => {
+                     const regex = new RegExp(`${parentKey}:\\s*\\([\\s\\S]*?${fieldKey}:\\s*([\\d.]+)[\\s\\S]*?\\)`);
+                     const m = block.match(regex);
+                     if (m) return parseFloat(m[1]);
+                     return null;
+                 };
+
+                 const name = getValue("name");
+                 if (!name) continue;
+
+                 const depthTuple = getTuple("depth_range");
+                 const min = depthTuple ? depthTuple[0] : 0;
+                 const max = depthTuple ? depthTuple[1] : 10;
+                 const weight = getStructField("weight_range", "average") || 0;
+                 const base_value = parseFloat(getValue("base_value")) || 0;
+
+                 fishList.push({
+                     name: name,
+                     rarity: getValue("rarity") || "Common",
+                     category: getValue("category") || "Standard",
+                     min: min,
+                     max: max,
+                     weight: weight,
+                     value: base_value
+                 });
+             }
+             
+             return fishList.filter(f => f.name !== "fish_types" && f.name !== "min" && !f.name.includes("fish_types"));
+        }
+
+        // --- Fetch External Data ---
+        async function loadExternalData() {
+            console.log("Attempting to load external game data...");
+            try {
+                // Fetch the RON file from the specified path
+                const response = await fetch('./data/gamedata/fish_types.ron');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status} at path ${response.url}`);
+                }
+                
+                const text = await response.text();
+                const newFish = parseRonText(text);
+                
+                if (newFish.length > 0) {
+                    // Merge Data
+                    const dataMap = new Map(currentData.map(item => [item.name, item]));
+                    newFish.forEach(item => dataMap.set(item.name, item));
+                    currentData = Array.from(dataMap.values());
+                    
+                    renderMap();
+                    console.log("Successfully updated fish data from ./data/gamedata/fish_types.ron");
+                }
+            } catch (err) {
+                // We default to console warning so it doesn't disrupt the user if they just want to view the static site
+                // without the external data file present.
+                console.warn("Could not load external fish data. Using default embedded data.", err);
+            }
+        }
+
+        // --- Fit / Zoom Out Logic ---
+        const btnFit = document.getElementById('btn-fit');
+        const iconFit = document.getElementById('icon-fit');
+        const textFit = document.getElementById('text-fit');
+
+        function toggleFit() {
+            isFitted = !isFitted;
+            if (isFitted) {
+                // Set height to current container height
+                const containerHeight = mapViewport.clientHeight;
+                currentTotalHeight = containerHeight;
+                
+                // Update UI
+                iconFit.setAttribute('data-lucide', 'expand');
+                textFit.innerText = "Scroll";
+                
+                // Hide scrollbar temporarily as we fit content exactly
+                document.getElementById('map-scroll-container').classList.add('overflow-hidden');
+            } else {
+                // Restore original height
+                currentTotalHeight = DEFAULT_TOTAL_HEIGHT;
+                
+                // Update UI
+                iconFit.setAttribute('data-lucide', 'minimize-2');
+                textFit.innerText = "Fit";
+                
+                // Restore scrollbar
+                document.getElementById('map-scroll-container').classList.remove('overflow-hidden');
+            }
+            renderMap();
+        }
+
+        btnFit.addEventListener('click', toggleFit);
+
+        // --- Fullscreen Logic ---
+        const btnFullscreen = document.getElementById('btn-fullscreen');
+        const iconFullscreen = document.getElementById('icon-fullscreen');
+        const textFullscreen = document.getElementById('text-fullscreen');
+        const appContainer = document.getElementById('app-container');
+        const mapViewport = document.getElementById('map-viewport');
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement && !manualFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {
+                    // Fallback to CSS fullscreen if native fails
+                    manualFullscreen = true;
+                    updateFullscreenUI();
+                });
+            } else {
+                if (document.exitFullscreen && document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    manualFullscreen = false;
+                    updateFullscreenUI();
+                }
+            }
+        }
+
+        function setFullscreenLayout(active) {
+            if (active) {
+                // App Container: Maximize to screen
+                appContainer.classList.remove('max-w-5xl', 'mx-auto');
+                appContainer.classList.add('fixed', 'inset-0', 'z-50', 'bg-slate-950', 'p-4', 'flex', 'flex-col');
+                
+                // Map Viewport: Remove fixed height, use flex growth
+                mapViewport.classList.remove('h-[600px]', 'lg:h-[800px]');
+                mapViewport.classList.add('flex-1', 'min-h-0'); // min-h-0 crucial for nested flex scrolling
+            } else {
+                // App Container: Restore centered box
+                appContainer.classList.add('max-w-5xl', 'mx-auto');
+                appContainer.classList.remove('fixed', 'inset-0', 'z-50', 'bg-slate-950', 'p-4', 'flex', 'flex-col');
+                
+                // Map Viewport: Restore fixed height
+                mapViewport.classList.add('h-[600px]', 'lg:h-[800px]');
+                mapViewport.classList.remove('flex-1', 'min-h-0');
+            }
+        }
+
+        function updateFullscreenUI() {
+            const isFull = !!document.fullscreenElement || manualFullscreen;
+            if (isFull) {
+                iconFullscreen.setAttribute('data-lucide', 'minimize');
+                textFullscreen.innerText = "Exit";
+                setFullscreenLayout(true);
+            } else {
+                iconFullscreen.setAttribute('data-lucide', 'maximize');
+                textFullscreen.innerText = "Full";
+                setFullscreenLayout(false);
+            }
+            
+            // If we are currently fitted, we need to re-measure and re-render because height changed
+            if (isFitted) {
+                // Small timeout to allow layout transition to settle
+                setTimeout(() => {
+                    currentTotalHeight = mapViewport.clientHeight;
+                    renderMap();
+                }, 50);
+            }
+            
+            lucide.createIcons();
+        }
+
+        btnFullscreen.addEventListener('click', toggleFullscreen);
+        document.addEventListener('fullscreenchange', updateFullscreenUI);
+        
+        // Window resize handler to adjust fit if needed
+        window.addEventListener('resize', () => {
+            if (isFitted) {
+                currentTotalHeight = mapViewport.clientHeight;
+                renderMap();
+            }
+        });
+
+        // --- Init ---
+        renderMap();
+        lucide.createIcons();
+        // Trigger fetch on launch
+        loadExternalData();
+
+    </script>
+</body>
+</html>
