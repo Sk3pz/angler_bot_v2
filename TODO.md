@@ -14,6 +14,7 @@
   - [x] Bait Bucket
   - [ ] Junk / Treasure Inventory
 - [ ] Auto bait - setting in /bait to auto use the same bait if you have it
+- [ ] Buff bait / low-midgame catch rates / fish
 - [ ] Shop should show current used item
 - [ ] First time cast tutorial with Darryl
 - [ ] Jerrie's Jumble
