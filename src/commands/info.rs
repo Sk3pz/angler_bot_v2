@@ -62,10 +62,10 @@ command! {
 
             // Performance Stats (Inline)
             .field("📊 Stats", format!(
-                "**Strength:** {}\n**Speed:** {}\n**Luck:** {}\n**Depth:** {}",
+                "**Strength:** {}\n**Speed:** {}\n**Luck:** {}%\n**Depth:** {}",
                 loadout.get_total_strength_display(),
                 loadout.get_speed_multiplier_display(),
-                loadout.get_catch_chance_display(),
+                (loadout.rod.sensitivity * 100.0) as u32,
                 loadout.get_depth_range_display()
             ), true)
 
