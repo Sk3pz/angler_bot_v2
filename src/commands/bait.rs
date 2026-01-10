@@ -87,9 +87,11 @@ command! {
             match custom_id.as_str() {
                 "bait_up" => {
                     if index > 0 { index -= 1; }
+                    else { index = max_index; }
                 },
                 "bait_down" => {
                     if index < max_index { index += 1; }
+                    else { index = 0; }
                 },
                 "bait_equip" => {
                     // TODO: If the user is casting and had a bait bucket open, they can exploit
@@ -198,7 +200,7 @@ fn build_bait_embed(user_file: &UserFile, selected_index: usize, feedback: &Opti
         .title("🪣 Bait Bucket")
         .description(description)
         .color(0x2B2D31)
-        .footer(CreateEmbedFooter::new(format!("Items: {} | This will close in 2 minutes to save resources.", user_file.file.bait_bucket.len())))
+        .footer(CreateEmbedFooter::new(format!("Items: {} | This closes automatically after 2min of inactivity", user_file.file.bait_bucket.len())))
 }
 
 fn build_bait_components() -> Vec<CreateActionRow> {
