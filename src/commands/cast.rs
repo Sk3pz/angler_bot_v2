@@ -373,7 +373,7 @@ command! {
             ("🌊 Cast Depth", format!("{}", depth_display), false),
             ("🧙 Strange Angler Darryl", format!("*{}*", random_mysterious_message), false),
         ])
-        .thumbnail("attachment://darryl.png")
+        .thumbnail("attachment://FishingRod.png")
         .color(0x3498db)
         .footer(CreateEmbedFooter::new(format!("{}", random_tip())));
 
@@ -389,7 +389,7 @@ command! {
                 .embed(embed)
                 .components(vec![buttons]);
 
-        let attachment = CreateAttachment::path("./assets/darryl.png").await;
+        let attachment = CreateAttachment::path("./assets/FishingRod.png").await;
 
         // use the attachment if found
         if let Ok(file) = attachment {
