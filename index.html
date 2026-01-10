@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full w-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -49,11 +49,13 @@
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-200 font-sans h-screen w-screen overflow-hidden p-4 flex flex-col">
+<body class="bg-slate-950 text-slate-200 font-sans h-full w-full overflow-hidden flex flex-col">
 
-<div id="app-container" class="w-full h-full flex flex-col relative transition-all duration-300">
+<!-- Main Container: Fills height, handles padding internally -->
+<div id="app-container" class="w-full h-full flex flex-col relative p-2 sm:p-4 transition-all duration-300">
 
-    <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-4 shrink-0">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-2 shrink-0">
         <div>
             <h1 class="text-xl font-bold text-slate-100 flex items-center gap-2">
                 <i data-lucide="map" class="text-cyan-400 w-5 h-5"></i>
@@ -70,45 +72,61 @@
         </div>
     </div>
 
-    <div id="map-viewport" class="relative w-full bg-slate-900 rounded-lg shadow-2xl border border-slate-800 select-none flex flex-col flex-1 min-h-0 overflow-hidden">
+    <!-- Visual Map Viewport -->
+    <!-- flex-1 min-h-0 ensures it takes all remaining height but doesn't overflow the flex container parent -->
+    <div id="map-viewport" class="flex-1 min-h-0 relative w-full bg-slate-900 rounded-lg shadow-2xl border border-slate-800 select-none flex flex-col overflow-hidden">
 
+        <!-- Scrollable Container -->
         <div class="flex-1 relative overflow-auto custom-scrollbar" id="map-scroll-container">
 
+            <!-- Fixed Axis Overlay -->
+            <!-- The height here is dynamic via JS -->
             <div class="sticky left-0 z-30 w-16 pointer-events-none float-left mr-[-4rem]" id="axis-container">
                 <div class="absolute top-0 bottom-0 left-0 w-16 bg-slate-950/80 backdrop-blur-md border-r border-white/10 z-30">
+                    <!-- Axis labels will be injected here -->
                 </div>
             </div>
 
-            <div id="map-content" class="relative bg-slate-900 h-[1200px]" style="min-width: 100px;">
+            <!-- Inner Content (Dynamic Width & Height) -->
+            <div id="map-content" class="relative bg-slate-900" style="min-width: 100px;">
+                <!-- Background Gradient -->
                 <div class="absolute inset-0 z-0 pointer-events-none" style="background: linear-gradient(to bottom, #4fc3f7 0%, #0284c7 20%, #0f172a 50%, #000000 100%);"></div>
 
+                <!-- Grid Lines container -->
                 <div id="grid-lines-container"></div>
 
+                <!-- Labels -->
                 <div class="absolute left-20 top-0 flex items-center text-cyan-200 text-xs font-bold uppercase tracking-widest z-10 py-1">
                     <i data-lucide="waves" class="w-3 h-3 mr-1"></i> Surface
                 </div>
 
+                <!-- Abyss Label (Positioned dynamically in JS) -->
                 <div id="abyss-label" class="absolute left-0 right-0 text-center text-indigo-900/30 font-black text-6xl tracking-[1rem] pointer-events-none select-none">
                     ABYSS
                 </div>
 
+                <!-- Fish Items Container -->
                 <div id="fish-items-container"></div>
             </div>
         </div>
 
+        <!-- Footer Hint -->
         <div class="bg-slate-900 border-t border-slate-800 p-1 text-center text-[10px] text-slate-500 uppercase tracking-wider z-40 shrink-0">
-            Scroll Horizontal & Vertical for more • Click items for details
+            <span id="loading-text">Loading data from .ron file...</span>
+            <span class="hidden" id="footer-text">Scroll Horizontal & Vertical for more • Click items for details</span>
         </div>
     </div>
 
 </div>
 
+<!-- Fish Detail Modal -->
 <div id="fish-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 hidden animate-fade-in">
     <div id="modal-content" class="bg-slate-900 border-2 p-6 rounded-xl shadow-2xl max-w-sm w-full relative overflow-hidden transition-all" onclick="event.stopPropagation()">
         <button id="btn-close-modal" class="absolute top-2 right-2 text-slate-400 hover:text-white z-10">
             <i data-lucide="x" class="w-5 h-5"></i>
         </button>
 
+        <!-- Background Accent -->
         <div id="modal-accent" class="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-20 blur-2xl pointer-events-none"></div>
 
         <div class="flex flex-col gap-3 relative z-0">
@@ -147,77 +165,21 @@
 
 <script>
     // --- Data & State ---
-    const initialData = [
-        // BAIT FISH
-        { name: "Goldfish", rarity: "Common", category: "BaitFish", min: 0, max: 20, weight: 0.2, value: 5.0 },
-        { name: "Minnow", rarity: "Common", category: "BaitFish", min: 0, max: 15, weight: 0.1, value: 2.0 },
-        { name: "Sardine", rarity: "Common", category: "BaitFish", min: 10, max: 100, weight: 0.4, value: 4.0 },
-        { name: "Bluegill", rarity: "Common", category: "BaitFish", min: 5, max: 30, weight: 1.0, value: 8.0 },
-        // SCHOOLING
-        { name: "Rainbow Trout", rarity: "Common", category: "Schooling", min: 10, max: 60, weight: 6.0, value: 15.0 },
-        { name: "Mackerel", rarity: "Common", category: "Schooling", min: 20, max: 80, weight: 2.5, value: 12.0 },
-        { name: "Yellow Perch", rarity: "Common", category: "Schooling", min: 10, max: 50, weight: 1.0, value: 10.0 },
-        { name: "Salmon", rarity: "Uncommon", category: "Schooling", min: 20, max: 150, weight: 15.0, value: 35.0 },
-        { name: "Crappie", rarity: "Common", category: "Schooling", min: 5, max: 30, weight: 1.0, value: 9.0 },
-        { name: "Mahi Mahi", rarity: "Uncommon", category: "Schooling", min: 10, max: 80, weight: 25.0, value: 40.0 },
-        // ORNAMENTAL
-        { name: "Clownfish", rarity: "Uncommon", category: "Ornamental", min: 15, max: 60, weight: 0.25, value: 50.0 },
-        { name: "Koi", rarity: "Rare", category: "Ornamental", min: 5, max: 40, weight: 12.0, value: 120.0 },
-        { name: "Angelfish", rarity: "Uncommon", category: "Ornamental", min: 20, max: 80, weight: 0.4, value: 45.0 },
-        { name: "Discus", rarity: "Rare", category: "Ornamental", min: 10, max: 40, weight: 0.5, value: 70.0 },
-        { name: "Lionfish", rarity: "Rare", category: "Ornamental", min: 20, max: 100, weight: 2.5, value: 95.0 },
-        // BOTTOM FEEDER
-        { name: "Channel Catfish", rarity: "Uncommon", category: "BottomFeeder", min: 30, max: 120, weight: 15.0, value: 25.0 },
-        { name: "Common Carp", rarity: "Common", category: "BottomFeeder", min: 15, max: 60, weight: 15.0, value: 18.0 },
-        { name: "Flounder", rarity: "Common", category: "BottomFeeder", min: 30, max: 150, weight: 4.0, value: 22.0 },
-        { name: "Sturgeon", rarity: "Elusive", category: "BottomFeeder", min: 60, max: 300, weight: 120.0, value: 200.0 },
-        { name: "Ocean Sunfish", rarity: "Rare", category: "Forager", min: 0, max: 1000, weight: 1000.0, value: 350.0 },
-        { name: "Red Snapper", rarity: "Uncommon", category: "BottomFeeder", min: 30, max: 200, weight: 15.0, value: 45.0 },
-        // PREDATORY
-        { name: "Largemouth Bass", rarity: "Common", category: "Predatory", min: 5, max: 35, weight: 6.0, value: 20.0 },
-        { name: "Northern Pike", rarity: "Uncommon", category: "Predatory", min: 10, max: 60, weight: 12.0, value: 40.0 },
-        { name: "Barracuda", rarity: "Rare", category: "Predatory", min: 30, max: 150, weight: 25.0, value: 80.0 },
-        { name: "Walleye", rarity: "Uncommon", category: "Predatory", min: 20, max: 70, weight: 5.0, value: 30.0 },
-        { name: "Muskellunge", rarity: "Rare", category: "Predatory", min: 10, max: 50, weight: 25.0, value: 85.0 },
-        // FORAGER
-        { name: "Pufferfish", rarity: "Uncommon", category: "Forager", min: 10, max: 80, weight: 3.0, value: 60.0 },
-        { name: "Eel", rarity: "Uncommon", category: "Forager", min: 40, max: 150, weight: 5.0, value: 45.0 },
-        // ABYSSAL
-        { name: "Anglerfish", rarity: "Rare", category: "Abyssal", min: 800, max: 2500, weight: 25.0, value: 150.0 },
-        { name: "Blobfish", rarity: "Uncommon", category: "Abyssal", min: 1000, max: 3000, weight: 20.0, value: 90.0 },
-        { name: "Coelacanth", rarity: "Legendary", category: "Abyssal", min: 1500, max: 4000, weight: 130.0, value: 500.0 },
-        { name: "Viperfish", rarity: "Rare", category: "Abyssal", min: 1200, max: 3500, weight: 1.0, value: 110.0 },
-        { name: "Oarfish", rarity: "Legendary", category: "Abyssal", min: 600, max: 3000, weight: 300.0, value: 550.0 },
-        { name: "Gulper Eel", rarity: "Rare", category: "Abyssal", min: 3000, max: 6000, weight: 5.0, value: 180.0 },
-        { name: "Fangtooth", rarity: "Uncommon", category: "Abyssal", min: 1500, max: 5000, weight: 0.2, value: 85.0 },
-        // APEX
-        { name: "Arapaima", rarity: "Legendary", category: "Apex", min: 5, max: 40, weight: 200.0, value: 450.0 },
-        { name: "Bluefin Tuna", rarity: "Elusive", category: "Apex", min: 50, max: 400, weight: 600.0, value: 850.0 },
-        { name: "Swordfish", rarity: "Elusive", category: "Apex", min: 200, max: 1000, weight: 300.0, value: 700.0 },
-        { name: "Goliath Grouper", rarity: "Elusive", category: "Apex", min: 20, max: 150, weight: 400.0, value: 600.0 },
-        { name: "Great White Shark", rarity: "Legendary", category: "Apex", min: 50, max: 800, weight: 1500.0, value: 1000.0 },
-        { name: "Blue Marlin", rarity: "Elusive", category: "Apex", min: 100, max: 600, weight: 500.0, value: 750.0 },
-        { name: "Alligator Gar", rarity: "Elusive", category: "Apex", min: 10, max: 50, weight: 200.0, value: 400.0 },
-        { name: "Wels Catfish", rarity: "Rare", category: "Apex", min: 30, max: 100, weight: 150.0, value: 300.0 },
-        { name: "Hammerhead Shark", rarity: "Elusive", category: "Apex", min: 40, max: 400, weight: 600.0, value: 600.0 },
-        { name: "Giant Squid", rarity: "Legendary", category: "Apex", min: 1000, max: 4000, weight: 600.0, value: 900.0 },
-        // MYTHICAL
-        { name: "Loch Ness Monster", rarity: "Mythical", category: "Mythological", min: 100, max: 5000, weight: 5000.0, value: 10000.0 },
-        { name: "Kraken", rarity: "Mythical", category: "Mythological", min: 1000, max: 5000, weight: 10000.0, value: 10000.0 },
-    ];
-
-    let currentData = [...initialData];
+    // Empty by default, populated via fetch
+    let currentData = [];
     let isFitted = false;
 
     const DEFAULT_TOTAL_HEIGHT = 1200;
     let currentTotalHeight = DEFAULT_TOTAL_HEIGHT;
 
     const MIN_LANE_WIDTH = 130;
+    const mapViewport = document.getElementById('map-viewport');
 
     // --- Styles & Constants ---
 
     const getCategoryStyles = (category) => {
-        switch(category) {
+        const c = category?.replace(/['"]+/g, '') || "Standard";
+        switch(c) {
             case "Apex":
             case "Predatory":
                 return { bg: "bg-rose-500", text: "text-white", border: "border-rose-600", pill: "bg-rose-700" };
@@ -241,7 +203,7 @@
     };
 
     const getRarityColor = (rarity) => {
-        const r = rarity?.toLowerCase() || "";
+        const r = (rarity?.toLowerCase() || "").replace(/['"]+/g, '');
         if (r === "mythical") return "text-amber-300";
         if (r === "legendary") return "text-orange-400";
         if (r === "elusive") return "text-purple-400";
@@ -271,6 +233,11 @@
     // --- Render Logic ---
 
     function renderMap() {
+        // Recalculate height to fill screen if screen is taller than default
+        if (!isFitted) {
+            currentTotalHeight = Math.max(DEFAULT_TOTAL_HEIGHT, mapViewport.clientHeight);
+        }
+
         // Sort
         const sorted = [...currentData].sort((a, b) => {
             if (a.min !== b.min) return a.min - b.min;
@@ -329,7 +296,6 @@
             const el = document.createElement('div');
             el.className = 'absolute w-full flex items-center justify-end pr-2';
             el.style.top = `${getDepthY(d)}px`;
-            // Updated Axis Style: Larger, Bold, Amber color
             el.innerHTML = `<div class="w-2 h-px bg-amber-400/60 mr-1"></div><span class="text-xs text-amber-400 font-bold font-mono drop-shadow-sm">${d}</span>`;
             axisContainer.appendChild(el);
         });
@@ -423,57 +389,139 @@
     document.getElementById('fish-modal').addEventListener('click', closeModal);
     document.getElementById('btn-close-modal').addEventListener('click', closeModal);
 
+    // --- RON Parser ---
+
     function parseRonText(text) {
+        // Remove comments
+        text = text.replace(/\/\/.*$/gm, '');
+
         const fishList = [];
-        const blockRegex = /\(([\s\S]*?)\)/g;
-        let match;
+        let i = 0;
 
-        while ((match = blockRegex.exec(text)) !== null) {
-            const block = match[1];
-            const getValue = (key) => {
-                const regex = new RegExp(`${key}:\\s*([^,\n)]+)`);
-                const m = block.match(regex);
-                if (m) return m[1].trim().replace(/"/g, '');
-                return null;
-            };
-            const getTuple = (key) => {
-                const regex = new RegExp(`${key}:\\s*\\(([^)]+)\\)`);
-                const m = block.match(regex);
-                if (m) return m[1].split(',').map(s => parseFloat(s.trim()));
-                return null;
-            };
-            const getStructField = (parentKey, fieldKey) => {
-                const regex = new RegExp(`${parentKey}:\\s*\\([\\s\\S]*?${fieldKey}:\\s*([\\d.]+)[\\s\\S]*?\\)`);
-                const m = block.match(regex);
-                if (m) return parseFloat(m[1]);
-                return null;
-            };
+        // Find start of fish_types list
+        const startMarker = "fish_types:";
+        let idx = text.indexOf(startMarker);
+        if (idx === -1) return [];
 
-            const name = getValue("name");
-            if (!name) continue;
+        // Move to opening '['
+        idx = text.indexOf('[', idx);
+        if (idx === -1) return [];
+        i = idx + 1;
 
-            const depthTuple = getTuple("depth_range");
-            const min = depthTuple ? depthTuple[0] : 0;
-            const max = depthTuple ? depthTuple[1] : 10;
-            const weight = getStructField("weight_range", "average") || 0;
-            const base_value = parseFloat(getValue("base_value")) || 0;
+        let buffer = "";
+        let depth = 0;
 
-            fishList.push({
-                name: name,
-                rarity: getValue("rarity") || "Common",
-                category: getValue("category") || "Standard",
-                min: min,
-                max: max,
-                weight: weight,
-                value: base_value
-            });
+        // Iterate through the array content
+        // We want to capture top-level (...) blocks inside the list
+        while (i < text.length) {
+            const char = text[i];
+
+            if (char === '(') {
+                if (depth === 0) buffer = ""; // Start of a new fish object
+                buffer += char;
+                depth++;
+            } else if (char === ')') {
+                buffer += char;
+                depth--;
+                if (depth === 0 && buffer.trim().length > 0) {
+                    // We have a complete fish block in 'buffer'
+                    const fish = parseFishBlock(buffer);
+                    if (fish) fishList.push(fish);
+                    buffer = "";
+                }
+            } else {
+                if (depth > 0) buffer += char;
+                // If depth is 0, check for end of list ']'
+                if (depth === 0 && char === ']') break;
+            }
+            i++;
         }
 
-        return fishList.filter(f => f.name !== "fish_types" && f.name !== "min" && !f.name.includes("fish_types"));
+        return fishList;
+    }
+
+    function parseFishBlock(block) {
+        // Helper: match `key: value` where value is simple (word or quoted string)
+        const getValue = (key) => {
+            const regex = new RegExp(`${key}:\\s*("([^"]*)"|([a-zA-Z0-9_.]+(?!\\s*\\()))`);
+            const m = block.match(regex);
+            if (m) {
+                return (m[2] || m[3]).replace(/['"]+/g, '');
+            }
+            return null;
+        };
+
+        // Helper: extract balanced sub-block for a key like `weight_range: (...)`
+        const getSubBlock = (key) => {
+            const startKey = `${key}:`;
+            let idx = block.indexOf(startKey);
+            if (idx === -1) return null;
+
+            idx = block.indexOf('(', idx);
+            if (idx === -1) return null;
+
+            let d = 1;
+            let end = idx + 1;
+            while (end < block.length && d > 0) {
+                if (block[end] === '(') d++;
+                else if (block[end] === ')') d--;
+                end++;
+            }
+            return block.substring(idx, end);
+        };
+
+        // Helper: Parse `min: X, max: Y, average: Z` inside a sub-block
+        const parseRange = (subBlock) => {
+            if (!subBlock) return null;
+            const getVal = (k) => {
+                const r = new RegExp(`${k}:\\s*([\\d.]+)`);
+                const m = subBlock.match(r);
+                return m ? parseFloat(m[1]) : 0;
+            };
+            return {
+                min: getVal('min'),
+                max: getVal('max'),
+                average: getVal('average')
+            };
+        };
+
+        // Helper: Parse tuple range `key: (min, max)`
+        const getTupleRange = (key) => {
+            // regex for `key: (val1, val2)`
+            const regex = new RegExp(`${key}:\\s*\\(\\s*([\\d.]+)\\s*,\\s*([\\d.]+)(?:\\s*,\\s*[\\d.]+)?\\s*\\)`);
+            const m = block.match(regex);
+            if (m) return { min: parseFloat(m[1]), max: parseFloat(m[2]) };
+            return null;
+        };
+
+        const name = getValue("name");
+        if (!name) return null;
+
+        const category = getValue("category") || "Standard";
+        const rarity = getValue("rarity") || "Common";
+        const base_value = parseFloat(getValue("base_value")) || 0;
+
+        // Parsing structured ranges
+        const depthData = getTupleRange("depth_range");
+        const weightBlock = getSubBlock("weight_range");
+        const weightData = parseRange(weightBlock);
+
+        return {
+            name: name,
+            rarity: rarity,
+            category: category,
+            min: depthData ? depthData.min : 0,
+            max: depthData ? depthData.max : 10,
+            weight: weightData ? weightData.average : 0,
+            value: base_value
+        };
     }
 
     // --- Fetch External Data ---
     async function loadExternalData() {
+        const loadingText = document.getElementById('loading-text');
+        const footerText = document.getElementById('footer-text');
+
         console.log("Attempting to load external game data...");
         try {
             // Fetch the RON file from the specified path
@@ -487,18 +535,20 @@
             const newFish = parseRonText(text);
 
             if (newFish.length > 0) {
-                // Merge Data
-                const dataMap = new Map(currentData.map(item => [item.name, item]));
-                newFish.forEach(item => dataMap.set(item.name, item));
-                currentData = Array.from(dataMap.values());
-
+                currentData = newFish; // Completely replace initial empty data
                 renderMap();
-                console.log("Successfully updated fish data from ./data/gamedata/fish_types.ron");
+
+                loadingText.classList.add('hidden');
+                footerText.classList.remove('hidden');
+
+                console.log("Successfully loaded fish data from ./data/gamedata/fish_types.ron");
+            } else {
+                loadingText.innerText = "Error: Parsed 0 fish from RON file.";
+                console.error("Parsed 0 fish from RON file.");
             }
         } catch (err) {
-            // We default to console warning so it doesn't disrupt the user if they just want to view the static site
-            // without the external data file present.
-            console.warn("Could not load external fish data. Using default embedded data.", err);
+            console.error("Could not load external fish data.", err);
+            loadingText.innerHTML = `<span class="text-red-400">Error loading data: ${err.message}. Ensure this file is served via HTTP (not file://) and the path is correct.</span>`;
         }
     }
 
@@ -506,7 +556,6 @@
     const btnFit = document.getElementById('btn-fit');
     const iconFit = document.getElementById('icon-fit');
     const textFit = document.getElementById('text-fit');
-    const mapViewport = document.getElementById('map-viewport');
 
     function toggleFit() {
         isFitted = !isFitted;
@@ -541,7 +590,6 @@
     const btnFullscreen = document.getElementById('btn-fullscreen');
     const iconFullscreen = document.getElementById('icon-fullscreen');
     const textFullscreen = document.getElementById('text-fullscreen');
-    const appContainer = document.getElementById('app-container');
 
     function toggleFullscreen() {
         if (!document.fullscreenElement) {
@@ -580,16 +628,12 @@
 
     // Window resize handler to adjust fit if needed
     window.addEventListener('resize', () => {
-        if (isFitted) {
-            currentTotalHeight = mapViewport.clientHeight;
-            renderMap();
-        }
+        renderMap();
     });
 
     // --- Init ---
-    renderMap();
+    // Don't render empty map initially, just start fetching
     lucide.createIcons();
-    // Trigger fetch on launch
     loadExternalData();
 
 </script>
