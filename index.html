@@ -73,14 +73,12 @@
     </div>
 
     <!-- Visual Map Viewport -->
-    <!-- flex-1 min-h-0 ensures it takes all remaining height but doesn't overflow the flex container parent -->
     <div id="map-viewport" class="flex-1 min-h-0 relative w-full bg-slate-900 rounded-lg shadow-2xl border border-slate-800 select-none flex flex-col overflow-hidden">
 
         <!-- Scrollable Container -->
         <div class="flex-1 relative overflow-auto custom-scrollbar" id="map-scroll-container">
 
             <!-- Fixed Axis Overlay -->
-            <!-- The height here is dynamic via JS -->
             <div class="sticky left-0 z-30 w-16 pointer-events-none float-left mr-[-4rem]" id="axis-container">
                 <div class="absolute top-0 bottom-0 left-0 w-16 bg-slate-950/80 backdrop-blur-md border-r border-white/10 z-30">
                     <!-- Axis labels will be injected here -->
@@ -100,7 +98,7 @@
                     <i data-lucide="waves" class="w-3 h-3 mr-1"></i> Surface
                 </div>
 
-                <!-- Abyss Label (Positioned dynamically in JS) -->
+                <!-- Abyss Label -->
                 <div id="abyss-label" class="absolute left-0 right-0 text-center text-indigo-900/30 font-black text-6xl tracking-[1rem] pointer-events-none select-none">
                     ABYSS
                 </div>
@@ -110,9 +108,9 @@
             </div>
         </div>
 
-        <!-- Footer Hint -->
+        <!-- Footer Hint / Status -->
         <div class="bg-slate-900 border-t border-slate-800 p-1 text-center text-[10px] text-slate-500 uppercase tracking-wider z-40 shrink-0">
-            <span id="loading-text">Loading data from .ron file...</span>
+            <span id="loading-text" class="animate-pulse">Initializing...</span>
             <span class="hidden" id="footer-text">Scroll Horizontal & Vertical for more • Click items for details</span>
         </div>
     </div>
@@ -126,7 +124,6 @@
             <i data-lucide="x" class="w-5 h-5"></i>
         </button>
 
-        <!-- Background Accent -->
         <div id="modal-accent" class="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-20 blur-2xl pointer-events-none"></div>
 
         <div class="flex flex-col gap-3 relative z-0">
@@ -165,7 +162,6 @@
 
 <script>
     // --- Data & State ---
-    // Empty by default, populated via fetch
     let currentData = [];
     let isFitted = false;
 
@@ -174,6 +170,8 @@
 
     const MIN_LANE_WIDTH = 130;
     const mapViewport = document.getElementById('map-viewport');
+    const loadingText = document.getElementById('loading-text');
+    const footerText = document.getElementById('footer-text');
 
     // --- Styles & Constants ---
 
@@ -233,18 +231,15 @@
     // --- Render Logic ---
 
     function renderMap() {
-        // Recalculate height to fill screen if screen is taller than default
         if (!isFitted) {
             currentTotalHeight = Math.max(DEFAULT_TOTAL_HEIGHT, mapViewport.clientHeight);
         }
 
-        // Sort
         const sorted = [...currentData].sort((a, b) => {
             if (a.min !== b.min) return a.min - b.min;
             return b.weight - a.weight;
         });
 
-        // Layout Algorithm (Lanes)
         const lanes = [];
         const placedItems = sorted.map((fish) => {
             const topY = getDepthY(fish.min);
@@ -275,21 +270,17 @@
             return { ...fish, top: topY, height: visualHeight, lane: assignedLane };
         });
 
-        // Set Container Dimensions
         const laneCount = lanes.length;
         const contentWidth = Math.max(100, (laneCount * MIN_LANE_WIDTH) + 80);
         const mapContent = document.getElementById('map-content');
         mapContent.style.width = `${contentWidth}px`;
         mapContent.style.height = `${currentTotalHeight}px`;
 
-        // Adjust axis container height to match
         document.getElementById('axis-container').style.height = `${currentTotalHeight}px`;
 
-        // Setup DOM Elements
         const fishContainer = document.getElementById('fish-items-container');
-        fishContainer.innerHTML = ''; // Clear previous
+        fishContainer.innerHTML = '';
 
-        // Render Axis
         const axisContainer = document.querySelector('#axis-container > div');
         axisContainer.innerHTML = '';
         [0, 20, 50, 100, 200, 500, 1000, 2000, 3000, 4000, 5000, 6000].forEach(d => {
@@ -300,7 +291,6 @@
             axisContainer.appendChild(el);
         });
 
-        // Render Grid Lines
         const gridContainer = document.getElementById('grid-lines-container');
         gridContainer.innerHTML = '';
         [0, 100, 200, 500, 1000, 2000, 4000].forEach(d => {
@@ -310,10 +300,8 @@
             gridContainer.appendChild(el);
         });
 
-        // Position Abyss Label
         document.getElementById('abyss-label').style.top = `${getDepthY(4500)}px`;
 
-        // Render Fish
         placedItems.forEach((fish, i) => {
             const styles = getCategoryStyles(fish.category);
             const rarityColor = getRarityColor(fish.rarity);
@@ -326,7 +314,6 @@
             fishEl.style.left = `${leftPos}px`;
             fishEl.style.width = `${MIN_LANE_WIDTH - 8}px`;
 
-            // Store fish data on element for click handler
             fishEl.dataset.json = JSON.stringify(fish);
             fishEl.onclick = () => openModal(fish);
 
@@ -348,7 +335,6 @@
             fishContainer.appendChild(fishEl);
         });
 
-        // Re-initialize icons for new elements
         lucide.createIcons();
     }
 
@@ -362,7 +348,6 @@
         const content = document.getElementById('modal-content');
         const accent = document.getElementById('modal-accent');
 
-        // Set content
         document.getElementById('modal-name').innerText = fish.name;
         document.getElementById('modal-category').innerText = fish.category;
         document.getElementById('modal-category').className = `px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${styles.bg} ${styles.text} bg-opacity-80`;
@@ -375,7 +360,6 @@
         document.getElementById('modal-min').innerText = fish.min;
         document.getElementById('modal-max').innerText = fish.max;
 
-        // Set Styles
         content.className = `bg-slate-900 border-2 ${styles.border} p-6 rounded-xl shadow-2xl max-w-sm w-full relative overflow-hidden transition-all`;
         accent.className = `absolute -top-10 -right-10 w-32 h-32 rounded-full ${styles.bg} opacity-20 blur-2xl pointer-events-none`;
 
@@ -392,18 +376,13 @@
     // --- RON Parser ---
 
     function parseRonText(text) {
-        // Remove comments
         text = text.replace(/\/\/.*$/gm, '');
-
         const fishList = [];
         let i = 0;
-
-        // Find start of fish_types list
         const startMarker = "fish_types:";
         let idx = text.indexOf(startMarker);
         if (idx === -1) return [];
 
-        // Move to opening '['
         idx = text.indexOf('[', idx);
         if (idx === -1) return [];
         i = idx + 1;
@@ -411,37 +390,30 @@
         let buffer = "";
         let depth = 0;
 
-        // Iterate through the array content
-        // We want to capture top-level (...) blocks inside the list
         while (i < text.length) {
             const char = text[i];
-
             if (char === '(') {
-                if (depth === 0) buffer = ""; // Start of a new fish object
+                if (depth === 0) buffer = "";
                 buffer += char;
                 depth++;
             } else if (char === ')') {
                 buffer += char;
                 depth--;
                 if (depth === 0 && buffer.trim().length > 0) {
-                    // We have a complete fish block in 'buffer'
                     const fish = parseFishBlock(buffer);
                     if (fish) fishList.push(fish);
                     buffer = "";
                 }
             } else {
                 if (depth > 0) buffer += char;
-                // If depth is 0, check for end of list ']'
                 if (depth === 0 && char === ']') break;
             }
             i++;
         }
-
         return fishList;
     }
 
     function parseFishBlock(block) {
-        // Helper: match `key: value` where value is simple (word or quoted string)
         const getValue = (key) => {
             const regex = new RegExp(`${key}:\\s*("([^"]*)"|([a-zA-Z0-9_.]+(?!\\s*\\()))`);
             const m = block.match(regex);
@@ -451,7 +423,6 @@
             return null;
         };
 
-        // Helper: extract balanced sub-block for a key like `weight_range: (...)`
         const getSubBlock = (key) => {
             const startKey = `${key}:`;
             let idx = block.indexOf(startKey);
@@ -470,7 +441,6 @@
             return block.substring(idx, end);
         };
 
-        // Helper: Parse `min: X, max: Y, average: Z` inside a sub-block
         const parseRange = (subBlock) => {
             if (!subBlock) return null;
             const getVal = (k) => {
@@ -485,9 +455,7 @@
             };
         };
 
-        // Helper: Parse tuple range `key: (min, max)`
         const getTupleRange = (key) => {
-            // regex for `key: (val1, val2)`
             const regex = new RegExp(`${key}:\\s*\\(\\s*([\\d.]+)\\s*,\\s*([\\d.]+)(?:\\s*,\\s*[\\d.]+)?\\s*\\)`);
             const m = block.match(regex);
             if (m) return { min: parseFloat(m[1]), max: parseFloat(m[2]) };
@@ -501,7 +469,6 @@
         const rarity = getValue("rarity") || "Common";
         const base_value = parseFloat(getValue("base_value")) || 0;
 
-        // Parsing structured ranges
         const depthData = getTupleRange("depth_range");
         const weightBlock = getSubBlock("weight_range");
         const weightData = parseRange(weightBlock);
@@ -519,36 +486,36 @@
 
     // --- Fetch External Data ---
     async function loadExternalData() {
-        const loadingText = document.getElementById('loading-text');
-        const footerText = document.getElementById('footer-text');
+        loadingText.innerText = "Loading ./data/gamedata/fish_types.ron ...";
+        loadingText.classList.remove('hidden');
+        footerText.classList.add('hidden');
 
-        console.log("Attempting to load external game data...");
+        const filePath = './data/gamedata/fish_types.ron';
+
         try {
-            // Fetch the RON file from the specified path
-            const response = await fetch('./data/gamedata/fish_types.ron');
+            const response = await fetch(filePath);
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status} at path ${response.url}`);
+                throw new Error(`HTTP ${response.status} (${response.statusText})`);
             }
 
             const text = await response.text();
+            console.log("RON File loaded, length:", text.length);
+
             const newFish = parseRonText(text);
+            console.log("Parsed Fish:", newFish);
 
             if (newFish.length > 0) {
-                currentData = newFish; // Completely replace initial empty data
+                currentData = newFish;
                 renderMap();
-
                 loadingText.classList.add('hidden');
                 footerText.classList.remove('hidden');
-
-                console.log("Successfully loaded fish data from ./data/gamedata/fish_types.ron");
             } else {
-                loadingText.innerText = "Error: Parsed 0 fish from RON file.";
-                console.error("Parsed 0 fish from RON file.");
+                loadingText.innerHTML = `<span class="text-amber-400">Warning: File loaded but parsed 0 fish. Check console for details.</span>`;
             }
         } catch (err) {
-            console.error("Could not load external fish data.", err);
-            loadingText.innerHTML = `<span class="text-red-400">Error loading data: ${err.message}. Ensure this file is served via HTTP (not file://) and the path is correct.</span>`;
+            console.error("Fetch Error:", err);
+            loadingText.innerHTML = `<span class="text-red-400">Failed to load data. ${err.message}.<br>Check if <b>${filePath}</b> exists in your repo.</span>`;
         }
     }
 
@@ -560,25 +527,15 @@
     function toggleFit() {
         isFitted = !isFitted;
         if (isFitted) {
-            // Set height to current container height
             const containerHeight = mapViewport.clientHeight;
             currentTotalHeight = containerHeight;
-
-            // Update UI
             iconFit.setAttribute('data-lucide', 'expand');
             textFit.innerText = "Scroll";
-
-            // Hide scrollbar temporarily as we fit content exactly
             document.getElementById('map-scroll-container').classList.add('overflow-hidden');
         } else {
-            // Restore original height
             currentTotalHeight = DEFAULT_TOTAL_HEIGHT;
-
-            // Update UI
             iconFit.setAttribute('data-lucide', 'minimize-2');
             textFit.innerText = "Fit";
-
-            // Restore scrollbar
             document.getElementById('map-scroll-container').classList.remove('overflow-hidden');
         }
         renderMap();
@@ -610,29 +567,23 @@
             iconFullscreen.setAttribute('data-lucide', 'maximize');
             textFullscreen.innerText = "Full";
         }
-
-        // If we are currently fitted, we need to re-measure and re-render because height changed
         if (isFitted) {
-            // Small timeout to allow layout transition to settle
             setTimeout(() => {
                 currentTotalHeight = mapViewport.clientHeight;
                 renderMap();
             }, 50);
         }
-
         lucide.createIcons();
     }
 
     btnFullscreen.addEventListener('click', toggleFullscreen);
     document.addEventListener('fullscreenchange', updateFullscreenUI);
 
-    // Window resize handler to adjust fit if needed
     window.addEventListener('resize', () => {
         renderMap();
     });
 
     // --- Init ---
-    // Don't render empty map initially, just start fetching
     lucide.createIcons();
     loadExternalData();
 
