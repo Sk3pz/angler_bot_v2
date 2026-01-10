@@ -128,7 +128,7 @@ impl EventHandler for Handler {
                     if let Some(guild_id) = command.guild_id {
                         let guildfile = GuildSettings::get(&guild_id);
                         if !guildfile.file.fishing_channels.is_empty()
-                            && !guildfile.file.fishing_channels.contains(&command.channel_id.get()) {
+                            && !guildfile.file.fishing_channels.contains(&command.channel_id.get()) && !cmd.is_admin() {
                             command_response_ephemeral(&ctx, &command, "This channel is not allowed for fishing commands!").await;
                             return;
                         }

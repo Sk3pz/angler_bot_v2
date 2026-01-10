@@ -12,6 +12,10 @@ use serenity::all::UserId;
 use crate::{data_management::monetary::MonetaryAmount, fishing::rod_data::RodLoadout, hey};
 use crate::fishing::bait_bucket::BaitBucket;
 
+// THIS WILL BE USED FOR CONVERTING OLD USER FILES TO A NEW FORMAT.
+// UPDATE THIS TO THE LAST VERSION'S USER FILE STRUCTURE AND UPDATE THE CONVERSION CODE BEFORE
+// EACH BREAKING UPDATE
+
 const DATA_DIR: &str = "./data";
 
 /**
@@ -26,7 +30,7 @@ const DATA_DIR: &str = "./data";
 **/
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct UserValues {
+pub struct OLD_UserValues {
     // stored user values here
     pub balance: MonetaryAmount,
     pub loadout: RodLoadout,
@@ -35,7 +39,7 @@ pub struct UserValues {
     pub bait_bucket: BaitBucket,
 }
 
-impl Default for UserValues {
+impl Default for OLD_UserValues {
     fn default() -> Self {
         Self {
             balance: MonetaryAmount::new(100.0),
@@ -48,14 +52,14 @@ impl Default for UserValues {
 }
 
 #[derive(Clone)]
-pub struct UserFile {
+pub struct OLD_UserFile {
     pub user_id: UserId,
-    pub file: UserValues,
+    pub file: OLD_UserValues,
     #[cfg(feature = "guild_relative_userdata")]
     pub guild_id: GuildId,
 }
 
-impl UserFile {
+impl OLD_UserFile {
     #[cfg(feature = "guild_relative_userdata")]
     pub fn new(id: &UserId, guild_id: &GuildId) -> Self {
         Self {
@@ -69,7 +73,7 @@ impl UserFile {
     pub fn new(id: &UserId) -> Self {
         Self {
             user_id: id.clone(),
-            file: UserValues::default(),
+            file: OLD_UserValues::default(),
         }
     }
 
@@ -88,7 +92,7 @@ impl UserFile {
 
     #[cfg(feature = "guild_relative_userdata")]
     pub fn read(id: &UserId, guild: &GuildId) -> Self {
-        let default_values = UserValues::default();
+        let default_values = OLD_UserValues::default();
 
         // create a new user file with default values
         let mut file = Self {
@@ -122,7 +126,7 @@ impl UserFile {
 
     #[cfg(not(feature = "guild_relative_userdata"))]
     pub fn read(id: &UserId) -> Self {
-        let default_values = UserValues::default();
+        let default_values = OLD_UserValues::default();
 
         // create a new user file with default values
         let mut file = Self {
@@ -182,7 +186,7 @@ impl UserFile {
 
     #[cfg(feature = "guild_relative_userdata")]
     fn generate(id: &UserId, guild: &GuildId) {
-        let default_values = UserValues::default();
+        let default_values = OLD_UserValues::default();
 
         // create a new user file with default values
         let default_file = Self {
@@ -199,7 +203,7 @@ impl UserFile {
 
     #[cfg(not(feature = "guild_relative_userdata"))]
     fn generate(id: &UserId) {
-        let default_values = UserValues::default();
+        let default_values = OLD_UserValues::default();
 
         // create a new user file with default values
         let default_file = Self {

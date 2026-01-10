@@ -10,6 +10,7 @@ pub mod fish_data;
 pub mod rod_data;
 pub mod shop;
 pub mod bait_bucket;
+mod inventory;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Attribute {
