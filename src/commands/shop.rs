@@ -212,6 +212,12 @@ fn handle_purchase(
     match category {
         ShopCategory::Rods => {
             let item = shop.rods.get(index).ok_or("Item not found")?;
+
+            // Check ownership
+            if user_file.file.inventory.rods.iter().any(|r| r.name == item.name) {
+                return Err("You already own this item! Equip with `/inventory`".to_string());
+            }
+
             price = item.price;
             item_name = item.name.clone();
             if balance < price { return Err(format!("Insufficient funds! Need ${:.2}", price)); }
@@ -223,6 +229,12 @@ fn handle_purchase(
         },
         ShopCategory::Reels => {
             let item = shop.reels.get(index).ok_or("Item not found")?;
+
+            // Check ownership
+            if user_file.file.inventory.reels.iter().any(|r| r.name == item.name) {
+                return Err("You already own this item! Equip with `/inventory`".to_string());
+            }
+
             price = item.price;
             item_name = item.name.clone();
             if balance < price { return Err(format!("Insufficient funds! Need ${:.2}", price)); }
@@ -232,6 +244,12 @@ fn handle_purchase(
         },
         ShopCategory::Lines => {
             let item = shop.lines.get(index).ok_or("Item not found")?;
+
+            // Check ownership
+            if user_file.file.inventory.lines.iter().any(|r| r.name == item.name) {
+                return Err("You already own this item! Equip with `/inventory`".to_string());
+            }
+
             price = item.price;
             item_name = item.name.clone();
             if balance < price { return Err(format!("Insufficient funds! Need ${:.2}", price)); }
@@ -241,6 +259,12 @@ fn handle_purchase(
         },
         ShopCategory::Sinkers => {
             let item = shop.sinkers.get(index).ok_or("Item not found")?;
+
+            // Check ownership
+            if user_file.file.inventory.sinkers.iter().any(|r| r.name == item.name) {
+                return Err("You already own this item! Equip with `/inventory`".to_string());
+            }
+
             price = item.price;
             item_name = item.name.clone();
             if balance < price { return Err(format!("Insufficient funds! Need ${:.2}", price)); }

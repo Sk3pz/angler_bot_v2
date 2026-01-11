@@ -3,14 +3,19 @@ use core::fmt;
 use better_term::{Color, flush_styles};
 
 fn raw_log(prefix: String, msg_color: Color, args: fmt::Arguments) {
-    println!(
+    let msg = format!(
         "{b}[{}{b}] {}{}",
-        //"{} {}{}",
         prefix,
         msg_color,
         args,
         b = Color::BrightBlack
     );
+    println!("{}", msg);
+    
+    // Push to GUI console
+    let clean_msg = format!("[{}] {}", prefix, args);
+    crate::gui::logging::push_log(clean_msg, msg_color);
+
     flush_styles();
 }
 

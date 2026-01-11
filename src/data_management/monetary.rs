@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 /// Avoids using floats and their weird bugs
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MonetaryAmount {
-    amount_x100: u32,
+    pub amount_x100: u32,
 }
 
 impl MonetaryAmount {

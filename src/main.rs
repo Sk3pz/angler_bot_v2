@@ -13,9 +13,13 @@ pub mod error;
 pub mod fishing;
 pub mod helpers;
 pub mod logging;
+pub mod gui;
 
 #[tokio::main]
 async fn main() {
+    // Initialize global log buffer
+    crate::gui::logging::GLOBAL_LOG_BUFFER.set(crate::gui::logging::LogBuffer::new(1000)).ok();
+
     yay!("Angler Bot is starting up!");
 
     // Create the data directory if it doesn't exist
@@ -130,8 +134,20 @@ async fn main() {
         return;
     };
 
-    // start the client
-    if let Err(e) = client.start().await {
-        nay!("Client error: {}", e);
-    }
+    let http = client.http.clone();
+
+    // Spawn the client in a background task
+    tokio::spawn(async move {
+        if let Err(e) = client.start().await {
+            nay!("Client error: {}", e);
+        }
+    });
+
+    // Launch GUI
+    let options = eframe::NativeOptions::default();
+    let _ = eframe::run_native(
+        "Angler Bot Admin",
+        options,
+        Box::new(|cc| Ok(Box::new(crate::gui::app::AnglerApp::new(cc, Some(http))))),
+    );
 }
