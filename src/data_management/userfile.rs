@@ -19,6 +19,7 @@ pub struct UserValues {
     pub inventory: Inventory,
     pub caught_fish: Vec<String>,
     pub total_catches: u64,
+    pub autobait: bool,
 }
 
 impl Default for UserValues {
@@ -28,6 +29,7 @@ impl Default for UserValues {
             inventory: Inventory::default(),
             caught_fish: Vec::new(),
             total_catches: 0,
+            autobait: false,
         }
     }
 }

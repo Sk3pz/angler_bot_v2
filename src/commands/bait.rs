@@ -51,7 +51,7 @@ command! {
         }
 
         let embed = build_bait_embed(&user_file, index, &feedback);
-        let components = build_bait_components();
+        let components = build_bait_components(&user_file);
 
         let response = CreateInteractionResponseMessage::new()
             .embed(embed)
@@ -79,7 +79,10 @@ command! {
                 _ => continue,
             };
 
-            if custom_id != "bait_equip" { feedback = None; }
+            // Reset feedback unless it's an action that produces feedback (equip or toggle)
+            if custom_id != "bait_equip" && custom_id != "bait_toggle" {
+                feedback = None;
+            }
 
             match custom_id.as_str() {
                 "bait_up" => {
@@ -123,12 +126,20 @@ command! {
                         }
                     }
                 },
+                "bait_toggle" => {
+                    user_file.file.autobait = !user_file.file.autobait;
+                    user_file.update();
+                    let status = if user_file.file.autobait { "ON" } else { "OFF" };
+                    feedback = Some(format!("AutoBait is now **{}**.", status));
+                },
                 _ => {}
             }
 
             let embed = build_bait_embed(&user_file, index, &feedback);
+            let components = build_bait_components(&user_file);
+
             let _ = interaction.create_response(&data.ctx.http, CreateInteractionResponse::UpdateMessage(
-                CreateInteractionResponseMessage::new().embed(embed).components(build_bait_components())
+                CreateInteractionResponseMessage::new().embed(embed).components(components)
             )).await;
         }
 
@@ -155,6 +166,10 @@ fn build_bait_embed(user_file: &UserFile, selected_index: usize, feedback: &Opti
         let icon = if msg.contains("Failed") { "❌" } else { "✅" };
         description.push_str(&format!("### {} {}\n\n", icon, msg));
     }
+
+    // AutoBait Status Display
+    // let autobait_status = if user_file.file.autobait { "Enabled (auto-equips duplicate baits on use)" } else { "Disabled" };
+    // description.push_str(&format!("🤖 **AutoBait:** {}\n", autobait_status));
 
     // Get currently equipped bait name using the Inventory helper
     let current_equipped = match user_file.file.inventory.get_loadout().bait {
@@ -194,16 +209,24 @@ fn build_bait_embed(user_file: &UserFile, selected_index: usize, feedback: &Opti
         .title("🪣 Bait Bucket")
         .description(description)
         .color(0x2B2D31)
-        .footer(CreateEmbedFooter::new(format!("Items: {} | This closes automatically after 2min of inactivity", user_file.file.inventory.bait_bucket.len())))
+        .footer(CreateEmbedFooter::new(format!("AutoBait will equip the same bait on use if you have multiple.\nItems: {} | This closes automatically after 2min of inactivity", user_file.file.inventory.bait_bucket.len())))
 }
 
-fn build_bait_components() -> Vec<CreateActionRow> {
+fn build_bait_components(user_file: &UserFile) -> Vec<CreateActionRow> {
     let up = CreateButton::new("bait_up").label("▲ Up").style(ButtonStyle::Primary);
     let down = CreateButton::new("bait_down").label("▼ Down").style(ButtonStyle::Primary);
     let equip = CreateButton::new("bait_equip").label("🎣 Select").style(ButtonStyle::Success);
 
+    // Dynamic Toggle Button
+    let (label, style) = if user_file.file.autobait {
+        ("🤖 AutoBait: ON", ButtonStyle::Success)
+    } else {
+        ("🤖 AutoBait: OFF", ButtonStyle::Secondary)
+    };
+    let toggle = CreateButton::new("bait_toggle").label(label).style(style);
+
     vec![
         CreateActionRow::Buttons(vec![up, down]),
-        CreateActionRow::Buttons(vec![equip]),
+        CreateActionRow::Buttons(vec![equip, toggle]),
     ]
 }

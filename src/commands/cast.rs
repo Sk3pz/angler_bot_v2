@@ -341,7 +341,7 @@ command! {
         // schedule the catch
         tokio::spawn(async move {
             tokio::time::sleep(Duration::from_secs(catch_time as u64)).await;
-            catch(cast).await;
+            catch(cast, catch_time >= 90.0).await;
         });
 
         // let the user know they have cast their line
@@ -409,7 +409,9 @@ command! {
         if let Some(interaction) = interaction {
             if interaction.data.custom_id == button_id {
                 // User clicked cancel
-                say!("{} clicked the cancel button!", data.sender.display_name());
+                if config.general.log_cast_data {
+                    say!("{} clicked the cancel button!", data.sender.display_name());
+                }
                 canceled.store(true, Ordering::Relaxed);
 
                 // remove the user from the fishing set
@@ -437,7 +439,7 @@ command! {
     }
 }
 
-pub async fn catch(catch: CastHandler) {
+pub async fn catch(catch: CastHandler, long_cast: bool) {
     // check if the cast was canceled during that time
     if catch.canceled.load(Ordering::Relaxed) {
         // cast was canceled, do not send a message or remove the user from the fishing set
@@ -463,11 +465,31 @@ pub async fn catch(catch: CastHandler) {
         };
 
         if should_remove {
-            // Remove the item physically from the bucket
-            user_file.file.inventory.bait_bucket.remove_index(index);
-            // Unequip since the item is gone
-            user_file.file.inventory.selected_bait = None;
-            user_file.update();
+            // 20% chance to keep bait
+            let keep_bait = rand::rng().random_range(0..20);
+            if keep_bait != 7 {
+                // Unequip since the item is gone
+                user_file.file.inventory.selected_bait = None;
+
+                // if the user has the same bait in their bucket, select it again
+                // determine same bait by name AND description, not just name
+                if user_file.file.autobait {
+                    let bait_bucket = &user_file.file.inventory.bait_bucket;
+                    let current_bait = bait_bucket.get(index).unwrap();
+
+                    if let Some(new_index) = bait_bucket.baits.iter().position(|b| {
+                        b.name == current_bait.name &&
+                        b.description == current_bait.description
+                    }) {
+                        user_file.file.inventory.selected_bait = Some(new_index);
+                    }
+                }
+
+                // Remove the item physically from the bucket
+                user_file.file.inventory.bait_bucket.remove_index(index);
+
+                user_file.update();
+            }
         }
     }
 
@@ -510,7 +532,18 @@ pub async fn catch(catch: CastHandler) {
     let loadout = user_file.file.inventory.get_loadout();
 
     // Catch chance didn't succeed
-    let caught = fish.try_hook(&loadout);
+    let mut caught = fish.try_hook(&loadout);
+
+    let mut force_qte = false;
+
+    if long_cast && !caught {
+        let c = rand::rng().random_range(0..100);
+        if c < 20 {
+            force_qte = true;
+            caught = true;
+        }
+    }
+
     if config.general.log_cast_data {
         let base = config.fishing.base_catch_chance;
         let sensitivity = loadout.catch_chance_multiplier();
