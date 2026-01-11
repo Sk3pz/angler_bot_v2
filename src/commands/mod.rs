@@ -17,6 +17,7 @@ mod game_tips;
 mod info;
 mod shop;
 mod bait;
+mod inventory;
 
 pub fn get_all_cmds() -> Vec<Box<dyn BotCommand>> {
     vec![
@@ -25,6 +26,7 @@ pub fn get_all_cmds() -> Vec<Box<dyn BotCommand>> {
         Box::new(info::InfoCommand),
         Box::new(shop::ShopCommand),
         Box::new(bait::BaitCommand),
+        Box::new(inventory::InventoryCommand),
         // admin commands
         Box::new(admin::register_channel::RegisterChannelCommand),
     ]
